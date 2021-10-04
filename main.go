@@ -14,8 +14,11 @@ import (
 func main() {
 	db_connect()
 
+	wd, _ := os.Getwd()
+	log.Printf("working directory: %s\n", wd)
+
 	PORT := ":8080"
-	log.Print("Running server on " + PORT)
+	log.Printf("Running server on %s\n", PORT)
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.HandleFunc("/hello/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s %s", r.Method, r.URL.Path)))
@@ -33,7 +36,7 @@ func db_connect() {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(DB_URI))
 	if err != nil {
 		// TODO
-		log.Fatal("@@@ failed to connect to MongoDB")
+		log.Fatal("@@@ failed to connect to MongoDB\n")
 	}
 	db := client.Database(DB_NAME)
 	log.Printf("db: %v\n", db)
