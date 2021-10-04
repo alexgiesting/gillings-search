@@ -19,8 +19,8 @@ func main() {
 
 	PORT := ":8080"
 	log.Printf("Running server on %s\n", PORT)
-	http.Handle("/", http.FileServer(http.Dir("./static")))
-	http.HandleFunc("/hello/", func(w http.ResponseWriter, r *http.Request) {
+	// http.Handle("/", http.FileServer(http.Dir("./static")))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s %s", r.Method, r.URL.Path)))
 	})
 	log.Fatal(http.ListenAndServe(PORT, nil))
