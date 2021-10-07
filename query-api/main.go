@@ -13,6 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	PORT = ":8080"
+	PATH = "/query"
+)
+
 type QueryHandler struct {
 	db *mongo.Database
 }
@@ -20,9 +25,9 @@ type QueryHandler struct {
 func main() {
 	client, db := db_connect()
 	defer client.Disconnect(context.TODO())
+	db_init(db)
 	http.Handle("/", &QueryHandler{db})
 
-	PORT := ":8080"
 	log.Printf("Running server on %s\n", PORT)
 	log.Fatal(http.ListenAndServe(PORT, nil))
 }
@@ -37,14 +42,66 @@ func db_connect() (*mongo.Client, *mongo.Database) {
 	DB_URI := fmt.Sprintf("mongodb://%s:%s@%s:%s/", "admin", DB_ADMIN_PASSWORD, DB_HOST, DB_PORT)
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(DB_URI))
 	if err != nil {
-		log.Fatal("@@@ failed to connect to MongoDB\n") // TODO
+		log.Fatalf("Failed to connect to MongoDB: %v\n", err) // TODO
 	}
 	db := client.Database(DB_NAME)
 	return client, db
 }
 
+func db_init(db *mongo.Database) {
+	bsonType := func(typ string) func(string) bson.M {
+		return func(description string) bson.M { return bson.M{"bsonType": typ, "description": description} }
+	}
+	b_str := bsonType("string")
+	b_int := bsonType("int")
+	faculty := db.Collection("faculty")
+	if faculty == nil {
+		db.CreateCollection(context.TODO(), "faculty", options.CreateCollection().SetValidator(bson.M{
+			"$jsonSchema": bson.M{
+				"bsonType": "object",
+				"required": []string{"name", "sid"},
+				"properties": bson.M{
+					"name": b_str("faculty name"),
+					"sid":  b_int("Scopus ID"),
+				},
+			},
+		}))
+	}
+
+	publications := db.Collection("publications")
+	if publications == nil {
+		db.CreateCollection(context.TODO(), "publications", options.CreateCollection().SetValidator(bson.M{
+			"$jsonSchema": bson.M{
+				"bsonType": "object",
+				"required": []string{"authors, title, year, source, eid"},
+				"properties": bson.M{
+					"authors": bson.M{
+						"bsonType":    "array",
+						"items":       b_str("author name"),
+						"description": "author names",
+					},
+					"title": b_str("title"),
+					"year":  b_int("year"),
+					"source": bson.M{
+						"bsonType": "object",
+						"properties": bson.M{
+							"title":  b_str("title"),
+							"volume": b_str("volume"),
+							"issue":  b_str("issue"),
+							"number": b_str("number"),
+							"doi":    b_str("DOI"),
+						},
+						"description": "source",
+					},
+					"eid": b_str("Scopus ID"),
+				},
+			},
+		}))
+	}
+}
+
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Path[1:]
+	query := r.URL.Path[len(PATH)+1:]
 	collections, err := handler.db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
 		log.Print(err) // TODO
