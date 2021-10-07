@@ -30,10 +30,11 @@ func main() {
 func db_connect() (*mongo.Client, *mongo.Database) {
 	DB_HOST := os.Getenv("MONGODB_SERVICE_HOST")
 	DB_PORT := os.Getenv("MONGODB_SERVICE_PORT")
-	DB_USER := os.Getenv("MONGODB_USER")
-	DB_PASSWORD := os.Getenv("MONGODB_PASSWORD")
+	// DB_USER := os.Getenv("MONGODB_USER")
+	// DB_PASSWORD := os.Getenv("MONGODB_PASSWORD")
+	DB_ADMIN_PASSWORD := os.Getenv("MONGODB_ADMIN_PASSWORD")
 	DB_NAME := os.Getenv("MONGODB_DATABASE")
-	DB_URI := fmt.Sprintf("mongodb://%s:%s@%s:%s/", DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+	DB_URI := fmt.Sprintf("mongodb://%s:%s@%s:%s/", "admin", DB_ADMIN_PASSWORD, DB_HOST, DB_PORT)
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(DB_URI))
 	if err != nil {
 		log.Fatal("@@@ failed to connect to MongoDB\n") // TODO
