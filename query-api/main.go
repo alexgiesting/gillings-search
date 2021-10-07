@@ -46,7 +46,7 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Path[1:]
 	collections, err := handler.db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
-		panic(err) // TODO
+		log.Print(err) // TODO
 	}
 	found := false
 	for _, name := range collections {
