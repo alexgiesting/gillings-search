@@ -55,8 +55,9 @@ func db_init(db *mongo.Database) {
 	b_str := bsonType("string")
 	b_int := bsonType("int")
 	faculty := db.Collection("faculty")
+	log.Printf("For collection `faculty`, found %v\n", faculty)
 	if faculty == nil {
-		log.Print("Adding collection `faculty` to the database...")
+		log.Print("Adding collection `faculty` to the database...\n")
 		err := db.CreateCollection(context.TODO(), "faculty", options.CreateCollection().SetValidator(bson.M{
 			"$jsonSchema": bson.M{
 				"bsonType": "object",
@@ -68,13 +69,14 @@ func db_init(db *mongo.Database) {
 			},
 		}))
 		if err != nil {
-			log.Printf("Failed to add `faculty`: %v", err)
+			log.Printf("Failed to add `faculty`: %v\n", err)
 		}
 	}
 
 	publications := db.Collection("publications")
+	log.Printf("For collection `publications`, found %v\n", publications)
 	if publications == nil {
-		log.Print("Adding collection `publications` to the database...")
+		log.Print("Adding collection `publications` to the database...\n")
 		err := db.CreateCollection(context.TODO(), "publications", options.CreateCollection().SetValidator(bson.M{
 			"$jsonSchema": bson.M{
 				"bsonType": "object",
@@ -103,7 +105,7 @@ func db_init(db *mongo.Database) {
 			},
 		}))
 		if err != nil {
-			log.Printf("Failed to add `publications`: %v", err)
+			log.Printf("Failed to add `publications`: %v\n", err)
 		}
 	}
 }
