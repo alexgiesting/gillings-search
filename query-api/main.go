@@ -49,64 +49,40 @@ func db_connect() (*mongo.Client, *mongo.Database) {
 }
 
 func db_init(db *mongo.Database) {
-	bsonType := func(typ string) func(string) bson.M {
-		return func(description string) bson.M { return bson.M{"bsonType": typ, "description": description} }
-	}
-	b_str := bsonType("string")
-	b_int := bsonType("int")
-	faculty := db.Collection("faculty")
-	log.Printf("For collection `faculty`, found %v\n", faculty)
-	if faculty == nil {
-		log.Print("Adding collection `faculty` to the database...\n")
-		err := db.CreateCollection(context.TODO(), "faculty", options.CreateCollection().SetValidator(bson.M{
-			"$jsonSchema": bson.M{
-				"bsonType": "object",
-				"required": []string{"name", "sid"},
-				"properties": bson.M{
-					"name": b_str("faculty name"),
-					"sid":  b_int("Scopus ID"),
-				},
-			},
-		}))
-		if err != nil {
-			log.Printf("Failed to add `faculty`: %v\n", err)
-		}
-	}
+	b_str := func(description string) bson.M { return bson.M{"bsonType": "string", "description": description} }
+	b_int := func(description string) bson.M { return bson.M{"bsonType": "int", "description": description} }
 
-	publications := db.Collection("publications")
-	log.Printf("For collection `publications`, found %v\n", publications)
-	if publications == nil {
-		log.Print("Adding collection `publications` to the database...\n")
-		err := db.CreateCollection(context.TODO(), "publications", options.CreateCollection().SetValidator(bson.M{
-			"$jsonSchema": bson.M{
-				"bsonType": "object",
-				"required": []string{"authors, title, year, source, eid"},
-				"properties": bson.M{
-					"authors": bson.M{
-						"bsonType":    "array",
-						"items":       b_str("author name"),
-						"description": "author names",
-					},
-					"title": b_str("title"),
-					"year":  b_int("year"),
-					"source": bson.M{
-						"bsonType": "object",
-						"properties": bson.M{
-							"title":  b_str("title"),
-							"volume": b_str("volume"),
-							"issue":  b_str("issue"),
-							"number": b_str("number"),
-							"doi":    b_str("DOI"),
-						},
-						"description": "source",
-					},
-					"eid": b_str("Scopus ID"),
-				},
-			},
-		}))
-		if err != nil {
-			log.Printf("Failed to add `publications`: %v\n", err)
-		}
+	add_collection(db, "faculty", bson.M{
+		"name": b_str("faculty name"),
+		"sid":  b_int("Scopus ID"),
+	})
+
+	add_collection(db, "publications", bson.M{
+		"authors": bson.M{
+			"description": "author names",
+			"bsonType":    "array",
+			"items":       b_str("author name"),
+		},
+		"title":  b_str("title"),
+		"year":   b_int("year"),
+		"source": b_str("source title"),
+		"volume": b_str("source volume"),
+		"issue":  b_str("source issue"),
+		"number": b_str("number"),
+		"doi":    b_str("DOI"),
+		"eid":    b_str("Scopus ID"),
+	})
+}
+
+func add_collection(db *mongo.Database, name string, schema bson.M) {
+	log.Printf("Checking for collection `%s`...\n", name)
+	err := db.CreateCollection(context.TODO(), name, options.CreateCollection().SetValidator(bson.M{
+		"$jsonSchema": bson.M{"bsonType": "object", "properties": schema},
+	}))
+	if err == nil {
+		log.Printf("Added `%s` to the database\n", name)
+	} else {
+		log.Printf("Failed to add `%s`: %v\n", name, err)
 	}
 }
 
