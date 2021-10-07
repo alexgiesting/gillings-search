@@ -63,6 +63,6 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		message = fmt.Sprintf("`%s` not found in collections", query)
 	}
 	message = fmt.Sprintf("%s %s\n\n%s: {%s}", r.Method, r.URL.Path, message, strings.Join(collections, ","))
-	message = fmt.Sprintf("<!DOCTYPE html><body>%s</body>", message)
+	message = fmt.Sprintf("<!DOCTYPE html><html><body><pre>%s</pre></body></html>", message)
 	w.Write([]byte(message))
 }
