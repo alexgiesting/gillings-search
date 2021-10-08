@@ -1,4 +1,4 @@
-package main
+package query
 
 import (
 	"context"
@@ -22,7 +22,7 @@ type QueryHandler struct {
 	db *mongo.Database
 }
 
-func main() {
+func Main() {
 	client, db := db_connect()
 	defer client.Disconnect(context.TODO())
 	db_init(db)
