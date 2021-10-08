@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"context"
@@ -11,11 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Database struct {
-	mongo.Database
-}
-
-func Connect() (*mongo.Client, *Database) {
+func Connect() (*mongo.Client, *mongo.Database) {
 	DB_HOST := os.Getenv("MONGODB_SERVICE_HOST")
 	DB_PORT := os.Getenv("MONGODB_SERVICE_PORT")
 	// DB_USER := os.Getenv("MONGODB_USER")
@@ -28,19 +24,19 @@ func Connect() (*mongo.Client, *Database) {
 		log.Fatalf("Failed to connect to MongoDB: %v\n", err) // TODO
 	}
 	db := client.Database(DB_NAME)
-	return client, &Database{*db}
+	return client, db
 }
 
-func (db *Database) Init() {
+func Init(db *mongo.Database) {
 	b_str := func(description string) bson.M { return bson.M{"bsonType": "string", "description": description} }
 	b_int := func(description string) bson.M { return bson.M{"bsonType": "int", "description": description} }
 
-	db.AddCollection("faculty", bson.M{
+	AddCollection(db, "faculty", bson.M{
 		"name": b_str("faculty name"),
 		"sid":  b_int("Scopus ID"),
 	})
 
-	db.AddCollection("publications", bson.M{
+	AddCollection(db, "publications", bson.M{
 		"authors": bson.M{
 			"description": "author names",
 			"bsonType":    "array",
@@ -57,7 +53,7 @@ func (db *Database) Init() {
 	})
 }
 
-func (db *Database) AddCollection(name string, schema bson.M) {
+func AddCollection(db *mongo.Database, name string, schema bson.M) {
 	log.Printf("Checking for collection `%s`...\n", name)
 	err := db.CreateCollection(context.TODO(), name, options.CreateCollection().SetValidator(bson.M{
 		"$jsonSchema": bson.M{"bsonType": "object", "properties": schema},

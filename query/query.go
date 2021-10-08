@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alexgiesting/gillings-search/db"
+	"github.com/alexgiesting/gillings-search/database"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 )
 
 type QueryHandler struct {
-	db *db.Database
+	db *mongo.Database
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +47,9 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Main() {
-	client, db := db.Connect()
+	client, db := database.Connect()
 	defer client.Disconnect(context.TODO())
-	db.Init()
+	database.Init(db)
 	http.Handle("/", &QueryHandler{db})
 
 	log.Printf("Running server on %s\n", PORT)

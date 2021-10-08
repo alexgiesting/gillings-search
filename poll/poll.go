@@ -4,19 +4,20 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexgiesting/gillings-search/db"
+	"github.com/alexgiesting/gillings-search/database"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func addCitations(db *db.Database) {
+func addCitations(db *mongo.Database) {
 	for {
 		time.Sleep(time.Hour) // TODO
 	}
 }
 
 func Main() {
-	client, db := db.Connect()
+	client, db := database.Connect()
 	defer client.Disconnect(context.TODO())
-	db.Init()
+	database.Init(db)
 
 	go addCitations(db)
 	select {}
