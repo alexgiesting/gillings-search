@@ -4,26 +4,20 @@ import (
 	"context"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/alexgiesting/gillings-search/db"
 )
 
-func Main() {
-	client, db := db_connect()
-	defer client.Disconnect(context.TODO())
-	db_init(db)
-
-	go db_add_citations(db)
-	select {}
-}
-
-func db_connect() (*mongo.Client, *mongo.Database) { // TODO extract to package??
-	return nil, nil
-}
-
-func db_init(db *mongo.Database) {} // TODO should this really be in both places??
-
-func db_add_citations(db *mongo.Database) {
+func addCitations(db *db.Database) {
 	for {
 		time.Sleep(time.Hour) // TODO
 	}
+}
+
+func Main() {
+	client, db := db.Connect()
+	defer client.Disconnect(context.TODO())
+	db.Init()
+
+	go addCitations(db)
+	select {}
 }
