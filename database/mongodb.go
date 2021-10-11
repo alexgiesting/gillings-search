@@ -6,61 +6,27 @@ import (
 	"log"
 	"os"
 
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/alexgiesting/gillings-search/paths"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func Connect() (*mongo.Client, *mongo.Database) {
-	DB_HOST := os.Getenv("MONGODB_SERVICE_HOST")
-	DB_PORT := os.Getenv("MONGODB_SERVICE_PORT")
-	// DB_USER := os.Getenv("MONGODB_USER")
-	// DB_PASSWORD := os.Getenv("MONGODB_PASSWORD")
-	DB_ADMIN_PASSWORD := os.Getenv("MONGODB_ADMIN_PASSWORD")
-	DB_NAME := os.Getenv("MONGODB_DATABASE")
-	DB_URI := fmt.Sprintf("mongodb://%s:%s@%s:%s/", "admin", DB_ADMIN_PASSWORD, DB_HOST, DB_PORT)
+	DB_HOST := os.Getenv(paths.ENV_MONGODB_HOST)
+	DB_PORT := os.Getenv(paths.ENV_MONGODB_PORT)
+	DB_ADMIN_PASSWORD := os.Getenv(paths.ENV_MONGODB_ADMIN_PASSWORD)
+	DB_NAME := os.Getenv(paths.ENV_MONGODB_NAME)
+
+	DB_CREDENTIALS := ""
+	if DB_ADMIN_PASSWORD != "" {
+		DB_CREDENTIALS = fmt.Sprintf("admin:%s@", DB_ADMIN_PASSWORD)
+	}
+	DB_URI := fmt.Sprintf("mongodb://%s%s:%s/", DB_CREDENTIALS, DB_HOST, DB_PORT)
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(DB_URI))
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v\n", err) // TODO
+		log.Fatalf("Failed to connect to MongoDB: %v\n", err)
 	}
 	db := client.Database(DB_NAME)
+
 	return client, db
-}
-
-func Init(db *mongo.Database) {
-	b_str := func(description string) bson.M { return bson.M{"bsonType": "string", "description": description} }
-	b_int := func(description string) bson.M { return bson.M{"bsonType": "int", "description": description} }
-
-	AddCollection(db, "faculty", bson.M{
-		"name": b_str("faculty name"),
-		"sid":  b_int("Scopus ID"),
-	})
-
-	AddCollection(db, "publications", bson.M{
-		"authors": bson.M{
-			"description": "author names",
-			"bsonType":    "array",
-			"items":       b_str("author name"),
-		},
-		"title":  b_str("title"),
-		"year":   b_int("year"),
-		"source": b_str("source title"),
-		"volume": b_str("source volume"),
-		"issue":  b_str("source issue"),
-		"number": b_str("number"),
-		"doi":    b_str("DOI"),
-		"eid":    b_str("Scopus ID"),
-	})
-}
-
-func AddCollection(db *mongo.Database, name string, schema bson.M) {
-	log.Printf("Checking for collection `%s`...\n", name)
-	err := db.CreateCollection(context.TODO(), name, options.CreateCollection().SetValidator(bson.M{
-		"$jsonSchema": bson.M{"bsonType": "object", "properties": schema},
-	}))
-	if err == nil {
-		log.Printf("Added `%s` to the database\n", name)
-	} else {
-		log.Printf("Failed to add `%s`: %v\n", name, err)
-	}
 }

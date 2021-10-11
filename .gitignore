@@ -1,0 +1,5 @@
+**.exe
+**.key
+data/**
+mongodb/**
+!mongodb/mongod.cfg

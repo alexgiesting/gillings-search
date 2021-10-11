@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/alexgiesting/gillings-search/database"
+	"github.com/alexgiesting/gillings-search/paths"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-)
-
-const (
-	PORT = ":8080"
-	PATH = "/query"
 )
 
 type QueryHandler struct {
@@ -22,7 +19,8 @@ type QueryHandler struct {
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Path[len(PATH)+1:]
+	query := r.URL.Path[len(paths.PATH_QUERY):]
+	log.Printf("@@@ query <%s>\n", query)
 	collections, err := handler.db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
 		log.Print(err) // TODO
@@ -47,11 +45,15 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Main() {
+	serveMux := http.NewServeMux()
+
 	client, db := database.Connect()
 	defer client.Disconnect(context.TODO())
 	database.Init(db)
-	http.Handle("/", &QueryHandler{db})
 
+	serveMux.Handle(paths.PATH_QUERY, &QueryHandler{db})
+
+	PORT := os.Getenv(paths.ENV_QUERY_PORT)
 	log.Printf("Running server on %s\n", PORT)
-	log.Fatal(http.ListenAndServe(PORT, nil))
+	log.Fatal(http.ListenAndServe(PORT, serveMux))
 }
