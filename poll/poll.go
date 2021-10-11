@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/alexgiesting/gillings-search/database"
 	"github.com/alexgiesting/gillings-search/paths"
@@ -130,17 +131,13 @@ func Main() {
 	defer client.Disconnect(context.TODO())
 	database.Init(db)
 
+	defer log.Fatal("Poll ended?")
 	for {
 		apiKey, present := os.LookupEnv(paths.ENV_SCOPUS_API_KEY)
 		if !present {
 			log.Fatal("Scopus API key missing")
 		}
 		addCitations(db, apiKey)
-		if true {
-			break
-		} // TODO
-		// time.Sleep(24 * time.Hour)
+		time.Sleep(24 * time.Hour)
 	}
-
-	log.Printf("poll ending")
 }

@@ -77,11 +77,9 @@ func drop(db *mongo.Database, collection string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	names, _ := db.ListCollectionNames(context.TODO(), bson.D{})
 	err = db.CreateCollection(context.TODO(), collection)
 	if err != nil {
-		log.Print(err) //.Fatal(err)
-		log.Println(names)
+		log.Fatal(err)
 		return
 	}
 }

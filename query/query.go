@@ -23,7 +23,7 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("@@@ query <%s>\n", query)
 	collections, err := handler.db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
-		log.Print(err) // TODO
+		log.Fatal(err)
 	}
 	found := false
 	for _, name := range collections {
