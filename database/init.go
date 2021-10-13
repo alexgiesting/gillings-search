@@ -113,7 +113,7 @@ func initFaculty(db *mongo.Database) {
 		for c, label := range lines[0] {
 			fields[label] = row[c]
 		}
-		name := strings.Split(fields["Name"], ",")
+		name := strings.Split(fields["Name"], ", ")
 		sid := strings.Split(fields["Scopus ID"], ",")
 		faculty[r] = Faculty{
 			GivenName: name[1],

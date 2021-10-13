@@ -1,4 +1,4 @@
-package poll
+package update
 
 import (
 	"context"
@@ -55,7 +55,12 @@ type ScopusResult struct {
 	} `json:"search-results"`
 }
 
-func addCitations(db *mongo.Database, apiKey string) {
+func addCitations(db *mongo.Database) {
+	apiKey, present := os.LookupEnv(paths.ENV_SCOPUS_API_KEY)
+	if !present {
+		log.Fatal("Scopus API key missing")
+	}
+
 	cursor, err := db.Collection(database.FACULTY).Find(context.TODO(), bson.D{}, options.Find().SetProjection(bson.M{"sid": 1}))
 	if err != nil {
 		log.Fatal(err)
@@ -126,18 +131,51 @@ func addCitations(db *mongo.Database, apiKey string) {
 
 }
 
+type QueryHandler struct {
+	request chan Request
+}
+
+type Request uint
+
+const (
+	UPDATE Request = iota
+	INITIALIZE
+	REINITIALIZE
+)
+
+func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func Main() {
 	client, db := database.Connect()
 	defer client.Disconnect(context.TODO())
 	database.Init(db)
 
+	serveMux := http.NewServeMux()
+	handler := QueryHandler{make(chan Request)}
+	serveMux.Handle(paths.PATH_UPDATE, &handler)
+
+	PORT := os.Getenv(paths.ENV_UPDATE_PORT)
+	log.Printf("Running server on %s\n", PORT)
+	go log.Fatal(http.ListenAndServe(PORT, serveMux))
+
 	defer log.Fatal("Poll ended?")
 	for {
-		apiKey, present := os.LookupEnv(paths.ENV_SCOPUS_API_KEY)
-		if !present {
-			log.Fatal("Scopus API key missing")
+		select {
+		case r := <-handler.request:
+			switch r {
+			case UPDATE:
+				addCitations(db)
+			case INITIALIZE:
+				database.Init(db)
+			case REINITIALIZE:
+				db.Collection("__dbinfo__").Drop(context.TODO())
+				database.Init(db)
+			}
+		default:
+			addCitations(db)
+			time.Sleep(24 * time.Hour)
 		}
-		addCitations(db, apiKey)
-		time.Sleep(24 * time.Hour)
 	}
 }

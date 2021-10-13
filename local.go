@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/alexgiesting/gillings-search/paths"
-	"github.com/alexgiesting/gillings-search/poll"
 	"github.com/alexgiesting/gillings-search/query"
+	"github.com/alexgiesting/gillings-search/update"
 )
 
 func runMongod() *os.Process {
@@ -49,16 +49,18 @@ func setupScopus() {
 const (
 	SERVER_PORT = ":3000"
 	QUERY_PORT  = ":3001"
+	UPDATE_PORT = ":3002"
 )
 
 func runServices() {
 	os.Setenv(paths.ENV_QUERY_PORT, QUERY_PORT)
+	os.Setenv(paths.ENV_UPDATE_PORT, UPDATE_PORT)
 	setupScopus()
 
 	// TODO prefix logs with process name, so we can tell them apart
 	//      maybe use contexts?
 	go query.Main()
-	go poll.Main()
+	go update.Main()
 }
 
 func main() {

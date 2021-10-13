@@ -45,12 +45,10 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Main() {
-	serveMux := http.NewServeMux()
-
 	client, db := database.Connect()
 	defer client.Disconnect(context.TODO())
-	database.Init(db)
 
+	serveMux := http.NewServeMux()
 	serveMux.Handle(paths.PATH_QUERY, &QueryHandler{db})
 
 	PORT := os.Getenv(paths.ENV_QUERY_PORT)
