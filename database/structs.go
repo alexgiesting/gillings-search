@@ -50,24 +50,28 @@ type Citation struct {
 	ISODate      string
 	DOI          string
 	Abstract     string
-	CitedByCount uint
+	CitedByCount int
 	Keywords     []string
 	SID          string
-	Authors      []struct {
-		Faculty
-		Local       bool
-		Affiliation string
-	}
-	Affiliations []struct {
-		SID     string
-		Name    string
-		City    string
-		Country string
-	}
-	Status Status
+	Authors      []Author
+	Affiliations []Affiliation
+	Status       Status
 }
 
-type Status uint
+type Author struct {
+	Faculty
+	Local       bool
+	Affiliation string
+}
+
+type Affiliation struct {
+	SID     string
+	Name    string
+	City    string
+	Country string
+}
+
+type Status int
 
 const (
 	STATUS_UNCONFIRMED Status = iota

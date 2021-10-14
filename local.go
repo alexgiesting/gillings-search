@@ -33,8 +33,8 @@ func runMongod() *os.Process {
 	return mongod
 }
 
-func setupScopus() {
-	keyFile, err := os.Open("scopus.key")
+func loadKey(envVariable string, keyFilename string) {
+	keyFile, err := os.Open(keyFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func setupScopus() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	os.Setenv(paths.ENV_SCOPUS_API_KEY, string(apiKey))
+	os.Setenv(envVariable, string(apiKey))
 	keyFile.Close()
 }
 
@@ -55,7 +55,8 @@ const (
 func runServices() {
 	os.Setenv(paths.ENV_QUERY_PORT, QUERY_PORT)
 	os.Setenv(paths.ENV_UPDATE_PORT, UPDATE_PORT)
-	setupScopus()
+	loadKey(paths.ENV_SCOPUS_API_KEY, "scopus.key")
+	loadKey(paths.ENV_UPDATE_KEY, "update.key")
 
 	// TODO prefix logs with process name, so we can tell them apart
 	//      maybe use contexts?

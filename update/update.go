@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"time"
+	"strconv"
+	"strings"
 
 	"github.com/alexgiesting/gillings-search/database"
 	"github.com/alexgiesting/gillings-search/paths"
@@ -18,41 +19,64 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// type ScopusQuery struct {
+// 	Accept           string `json:"httpAccept"` // application/json, application/atom+xml, application/xml
+// 	AccessToken      string `json:"access_token"`
+// 	InstitutionToken string `json:"insttoken"`
+// 	APIKey           string `json:"apiKey"`
+// 	RequestID        string `json:"reqId"`
+// 	ResourceVersion  string `json:"ver"` // facetexpand, new
+// 	Query            string `json:"query"`
+// 	View             string `json:"view"` // STANDARD, COMPLETE
+// 	SuppressNavLinks bool   `json:"suppressNavLinks"`
+// 	Year             string `json:"date"`
+// 	Offset           uint   `json:"start"`
+// 	Count            uint   `json:"count"`
+// 	Sort             string `json:"sort"`    // artnum, citedby-count, coverDate, creator, orig-load-date, pagecount, pagefirst, pageRange, publicationName, pubyear, relevancy, volume
+// 	Content          string `json:"content"` // core, dummy, all
+// 	Subject          string `json:"subj"`
+// 	UseAuthorAlias   bool   `json:"alias"`
+// 	Cursor           string `json:"cursor"`
+// 	Facets           string `json:"facets"`
+// }
+
 // TODO not all fields are retrieved unless using a subscriber IP address
 type ScopusResult struct {
 	Results struct {
-		Citations []struct {
-			SID          string `json:"dc:identifier"`
-			Title        string `json:"dc:title"`
-			Author       string `json:"dc:creator"`
-			PubType      string `json:"prism:aggregationType"`
-			PubName      string `json:"prism:publicationName"`
-			SubType      string `json:"subtypeDescription"`
-			Volume       string `json:"prism:volume"`
-			Pages        string `json:"prism:pageRange"`
-			Date         string `json:"prism:coverDisplayDate"`
-			ISODate      string `json:"prism:coverDate"`
-			DOI          string `json:"prism:doi"`
-			Abstract     string `json:"dc:description"`
-			CitedByCount string `json:"citedby-count"`
-			Keywords     string `json:"authkeywords"`
-			Authors      []struct {
-				SID            string `json:"authid"`
-				Name           string `json:"authname"`
-				GivenName      string `json:"given-name"`
-				Surname        string `json:"surname"`
-				Initials       string `json:"initials"`
-				AffiliationSID string `json:"afid"`
-			} `json:"author"`
-			Affiliations []struct {
-				SID     string `json:"afid"`
-				Name    string `json:"affilname"`
-				City    string `json:"affiliation-city"`
-				Country string `json:"affiliation-country"`
-			} `json:"affiliation"`
-		} `json:"entry"`
-		Count string `json:"opensearch:totalResults"`
+		Citations []Entry `json:"entry"`
+		Count     string  `json:"opensearch:totalResults"`
 	} `json:"search-results"`
+}
+
+type Entry struct {
+	SID          string `json:"dc:identifier"`
+	Title        string `json:"dc:title"`
+	Author       string `json:"dc:creator"`
+	PubType      string `json:"prism:aggregationType"`
+	PubName      string `json:"prism:publicationName"`
+	SubType      string `json:"subtypeDescription"`
+	Volume       string `json:"prism:volume"`
+	Pages        string `json:"prism:pageRange"`
+	Date         string `json:"prism:coverDisplayDate"`
+	ISODate      string `json:"prism:coverDate"`
+	DOI          string `json:"prism:doi"`
+	Abstract     string `json:"dc:description"`
+	CitedByCount string `json:"citedby-count"`
+	Keywords     string `json:"authkeywords"`
+	Authors      []struct {
+		SID            string `json:"authid"`
+		Name           string `json:"authname"`
+		GivenName      string `json:"given-name"`
+		Surname        string `json:"surname"`
+		Initials       string `json:"initials"`
+		AffiliationSID string `json:"afid"`
+	} `json:"author"`
+	Affiliations []struct {
+		SID     string `json:"afid"`
+		Name    string `json:"affilname"`
+		City    string `json:"affiliation-city"`
+		Country string `json:"affiliation-country"`
+	} `json:"affiliation"`
 }
 
 func addCitations(db *mongo.Database) {
@@ -61,74 +85,150 @@ func addCitations(db *mongo.Database) {
 		log.Fatal("Scopus API key missing")
 	}
 
+	for _, sid := range getSIDs(db) {
+		result := queryScopus(sid, apiKey)
+		for _, entry := range result.Results.Citations {
+			check := db.Collection(database.CITATIONS).FindOne(context.TODO(), bson.M{"sid": entry.SID})
+			if check.Err() == mongo.ErrNoDocuments {
+				addCitation(db, &entry) // TODO use chan instead
+			} else if check.Err() != nil {
+				log.Fatal(check.Err())
+			}
+		}
+		break // TODO
+	}
+}
+
+func getSIDs(db *mongo.Database) []string {
 	cursor, err := db.Collection(database.FACULTY).Find(context.TODO(), bson.D{}, options.Find().SetProjection(bson.M{"sid": 1}))
 	if err != nil {
 		log.Fatal(err)
 	}
-	sidLists := make([]struct {
-		SIDs []string `bson:"sid"`
-	}, 0, cursor.RemainingBatchLength())
-	err = cursor.All(context.TODO(), &sidLists)
+
+	sids := make([]string, 0, cursor.RemainingBatchLength())
+	for cursor.Next(context.TODO()) {
+		var sidList struct {
+			SIDs []string `bson:"sid"`
+		}
+		cursor.Decode(&sidList)
+		sids = append(sids, sidList.SIDs...)
+	}
+	return sids
+}
+
+func queryScopus(sid string, apiKey string) ScopusResult {
+	query := url.QueryEscape(fmt.Sprintf("AU-ID(%s)", sid))
+	url := fmt.Sprintf("https://api.elsevier.com/content/search/scopus?query=%s", query)
+	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, sidList := range sidLists {
-		for _, sid := range sidList.SIDs {
-			query := url.QueryEscape(fmt.Sprintf("AU-ID(%s)", sid))
-			url := fmt.Sprintf("https://api.elsevier.com/content/search/scopus?query=%s", query)
-			request, err := http.NewRequest("GET", url, nil)
-			if err != nil {
-				log.Fatal(err)
-			}
-			request.Header.Set("Accept", "application/json")
-			request.Header.Set("X-ELS-APIKey", apiKey)
-			response, err := http.DefaultClient.Do(request)
-			if err != nil {
-				log.Fatal(err)
-			}
-			body, err := ioutil.ReadAll(response.Body)
-			if err != nil {
-				log.Fatal(err)
-			}
-			var result ScopusResult
-			err = json.Unmarshal(body, &result)
-			if err != nil {
-				log.Fatal(err)
-			}
-			//addCitation(db, result) // TODO use chan
-			log.Printf(result.Results.Citations[0].Title)
-		}
-		if true {
-			return
-		} // TODO
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("X-ELS-APIKey", apiKey)
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// query, err := json.Marshal(struct {
-	// 	Accept           string `json:"httpAccept"` // application/json, application/atom+xml, application/xml
-	// 	AccessToken      string `json:"access_token"`
-	// 	InstitutionToken string `json:"insttoken"`
-	// 	APIKey           string `json:"apiKey"`
-	// 	RequestID        string `json:"reqId"`
-	// 	ResourceVersion  string `json:"ver"` // facetexpand, new
-	// 	Query            string `json:"query"`
-	// 	View             string `json:"view"` // STANDARD, COMPLETE
-	// 	SuppressNavLinks bool   `json:"suppressNavLinks"`
-	// 	Year             string `json:"date"`
-	// 	Offset           uint   `json:"start"`
-	// 	Count            uint   `json:"count"`
-	// 	Sort             string `json:"sort"`    // artnum, citedby-count, coverDate, creator, orig-load-date, pagecount, pagefirst, pageRange, publicationName, pubyear, relevancy, volume
-	// 	Content          string `json:"content"` // core, dummy, all
-	// 	Subject          string `json:"subj"`
-	// 	UseAuthorAlias   bool   `json:"alias"`
-	// 	Cursor           string `json:"cursor"`
-	// 	Facets           string `json:"facets"`
-	// }{
-	// 	Accept: "application/json",
-	// 	View:   "COMPLETE",
-	// })
-	// if err != nil {
-	// }
+	var result ScopusResult
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return result
+}
 
+func addCitation(db *mongo.Database, entry *Entry) {
+	citation, err := bson.Marshal(database.Citation{
+		Title:        entry.Title,
+		PubType:      entry.PubType,
+		PubName:      entry.PubName,
+		SubType:      entry.SubType,
+		Volume:       entry.Volume,
+		Pages:        entry.Pages,
+		Date:         entry.Date,
+		ISODate:      entry.ISODate,
+		DOI:          entry.DOI,
+		Abstract:     entry.Abstract,
+		CitedByCount: entry.getCitedByCount(),
+		Keywords:     entry.getKeywords(),
+		SID:          entry.SID[len("SCOPUS_ID:"):],
+		Authors:      entry.getAuthors(db),
+		Affiliations: entry.getAffiliations(),
+		Status:       database.STATUS_UNCONFIRMED,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.Collection(database.CITATIONS).InsertOne(context.TODO(), citation)
+}
+
+func (entry *Entry) getCitedByCount() int {
+	citedByCount, err := strconv.Atoi(entry.CitedByCount)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return citedByCount
+}
+
+func (entry *Entry) getKeywords() []string {
+	if entry.Keywords == "" {
+		return []string{}
+	} else {
+		return strings.Split(entry.Keywords, " | ")
+	}
+}
+
+func (entry *Entry) getAuthors(db *mongo.Database) []database.Author {
+	authors := make([]database.Author, len(entry.Authors))
+	for i, author := range entry.Authors {
+		// TODO probably precompute this?
+		check := db.Collection(database.FACULTY).FindOne(context.TODO(), bson.M{"sid": bson.M{"$elemMatch": author.SID}})
+		if check.Err() == mongo.ErrNoDocuments {
+			authors[i] = database.Author{
+				Faculty: database.Faculty{
+					GivenName: author.GivenName,
+					Surname:   author.Surname,
+					Title:     "",
+					SID:       []string{author.SID},
+				},
+				Local:       false,
+				Affiliation: author.AffiliationSID,
+			}
+		} else if check.Err() != nil {
+			log.Fatal(check.Err())
+		} else {
+			var faculty database.Faculty
+			err := check.Decode(faculty)
+			if err != nil {
+				log.Fatal(err)
+			}
+			authors[i] = database.Author{
+				Faculty:     faculty,
+				Local:       true,
+				Affiliation: author.AffiliationSID,
+			}
+		}
+	}
+	return authors
+}
+
+func (entry *Entry) getAffiliations() []database.Affiliation {
+	affiliations := make([]database.Affiliation, len(entry.Affiliations))
+	for i, affiliation := range entry.Affiliations {
+		affiliations[i] = database.Affiliation{
+			SID:     affiliation.SID,
+			Name:    affiliation.Name,
+			City:    affiliation.City,
+			Country: affiliation.Country,
+		}
+	}
+	return affiliations
 }
 
 type QueryHandler struct {
@@ -138,13 +238,36 @@ type QueryHandler struct {
 type Request uint
 
 const (
-	UPDATE Request = iota
+	PULL Request = iota
 	INITIALIZE
-	REINITIALIZE
+	RESET
 )
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	if query["key"][0] != os.Getenv(paths.ENV_UPDATE_KEY) {
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
+	}
 
+	path := r.URL.Path[len(paths.PATH_UPDATE):]
+	path = strings.TrimRight(path, "/")
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusAccepted)
+	fmt.Fprintln(w, "command received")
+
+	switch path {
+	case "pull":
+		handler.request <- PULL
+	case "init":
+		handler.request <- INITIALIZE
+	case "reset":
+		handler.request <- RESET
+	default:
+		log.Printf("Invalid request `%s` received by `update`\n", path)
+	}
 }
 
 func Main() {
@@ -158,24 +281,24 @@ func Main() {
 
 	PORT := os.Getenv(paths.ENV_UPDATE_PORT)
 	log.Printf("Running server on %s\n", PORT)
-	go log.Fatal(http.ListenAndServe(PORT, serveMux))
+	go func() { log.Fatal(http.ListenAndServe(PORT, serveMux)) }()
 
 	defer log.Fatal("Poll ended?")
 	for {
 		select {
 		case r := <-handler.request:
 			switch r {
-			case UPDATE:
+			case PULL:
 				addCitations(db)
 			case INITIALIZE:
 				database.Init(db)
-			case REINITIALIZE:
-				db.Collection("__dbinfo__").Drop(context.TODO())
+			case RESET:
+				db.Collection(database.META).Drop(context.TODO()) // TODO better db interface
 				database.Init(db)
 			}
-		default:
-			addCitations(db)
-			time.Sleep(24 * time.Hour)
+			// default:
+			// 	addCitations(db)
+			// 	time.Sleep(24 * time.Hour) // TODO move the timer out
 		}
 	}
 }

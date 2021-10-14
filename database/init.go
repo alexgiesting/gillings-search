@@ -169,6 +169,6 @@ func initThemes(db *mongo.Database) {
 
 func initCitations(db *mongo.Database, recovery string) {
 	drop(db, CITATIONS)
-	// TODO use poll
+	// TODO use update?
 	pop(db)
 }
