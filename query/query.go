@@ -3,10 +3,10 @@ package query
 import (
 	"context"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/alexgiesting/gillings-search/database"
 	"github.com/alexgiesting/gillings-search/paths"
@@ -19,28 +19,41 @@ type QueryHandler struct {
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Path[len(paths.PATH_QUERY):]
-	log.Printf("@@@ query <%s>\n", query)
-	collections, err := handler.db.ListCollectionNames(context.TODO(), bson.D{})
+	path := r.URL.Path[len(paths.PATH_QUERY):] // TODO
+	query := r.URL.Query()
+	log.Printf("@@@ endpoint <%s%s>\n", path, r.URL.RawQuery)
+
+	filter := make(map[string]interface{})
+	for k, v := range query {
+		switch k {
+		case "keyword":
+			// TODO
+		case "faculty":
+			if filter["authors"] == nil {
+				filter["authors"] = make([]bson.M, 0, 1)
+			}
+			filter["authors"] = append(filter["authors"].([]bson.M), bson.M{"$elemMatch": bson.M{"surname": v}})
+		case "dept":
+			// TODO
+		case "theme":
+			// TODO
+		}
+	}
+	bsonFilter, err := bson.Marshal(filter)
 	if err != nil {
 		log.Fatal(err)
 	}
-	found := false
-	for _, name := range collections {
-		if query == name {
-			found = true
-			break
-		}
-	}
+	log.Printf("%v", filter)
 
-	var message string
-	if found {
-		message = fmt.Sprintf("`%s` found in collections", query)
-	} else {
-		message = fmt.Sprintf("`%s` not found in collections", query)
+	cursor, err := handler.db.Collection(database.CITATIONS).Find(context.TODO(), bsonFilter)
+	if err != nil {
+		log.Fatal(err)
 	}
-	message = fmt.Sprintf("%s %s\n\n%s: {%s}", r.Method, r.URL.Path, message, strings.Join(collections, ","))
-	message = fmt.Sprintf("<!DOCTYPE html><html><body><pre>%s</pre></body></html>", message)
+	var results []database.Citation
+	cursor.All(context.TODO(), &results)
+
+	resultsString := html.EscapeString(fmt.Sprintf("%v", results))
+	message := fmt.Sprintf("<!DOCTYPE html><html><body><pre>%v</pre></body></html>", resultsString)
 	w.Write([]byte(message))
 }
 
