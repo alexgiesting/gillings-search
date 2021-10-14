@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alexgiesting/gillings-search/database"
 	"github.com/alexgiesting/gillings-search/paths"
@@ -94,12 +95,12 @@ func addCitations(db *mongo.Database) {
 		for _, entry := range result.Results.Citations {
 			check := db.Collection(database.CITATIONS).FindOne(context.TODO(), bson.M{"eid": entry.EID})
 			if check.Err() == mongo.ErrNoDocuments {
-				addCitation(db, &entry) // TODO use chan instead
+				addCitation(db, &entry) // TODO use chan instead?
 			} else if check.Err() != nil {
 				log.Fatal(check.Err())
 			}
 		}
-		break // TODO
+		break // TODO make partial version for testing
 	}
 }
 
@@ -273,22 +274,23 @@ func Main() {
 	log.Printf("Running server on %s\n", PORT)
 	go func() { log.Fatal(http.ListenAndServe(PORT, serveMux)) }()
 
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
 	defer log.Fatal("Poll ended?")
 	for {
 		select {
 		case r := <-handler.request:
 			switch r {
 			case PULL:
-				addCitations(db)
+				addCitations(db) // TODO make a version that only adds recent results
 			case INITIALIZE:
 				database.Init(db)
 			case RESET:
 				db.Collection(database.META).Drop(context.TODO()) // TODO better db interface
 				database.Init(db)
 			}
-			// default:
-			// 	addCitations(db)
-			// 	time.Sleep(24 * time.Hour) // TODO move the timer out
+		case <-ticker.C:
+			addCitations(db)
 		}
 	}
 }
