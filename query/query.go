@@ -2,8 +2,7 @@ package query
 
 import (
 	"context"
-	"fmt"
-	"html"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -19,9 +18,8 @@ type QueryHandler struct {
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len(paths.PATH_QUERY):] // TODO
+	// path := r.URL.Path[len(paths.PATH_QUERY):] // TODO
 	query := r.URL.Query()
-	log.Printf("@@@ endpoint <%s%s>\n", path, r.URL.RawQuery)
 
 	filter := make(map[string]interface{})
 	for k, v := range query {
@@ -29,10 +27,7 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "keyword":
 			// TODO
 		case "faculty":
-			if filter["authors"] == nil {
-				filter["authors"] = make([]bson.M, 0, 1)
-			}
-			filter["authors"] = append(filter["authors"].([]bson.M), bson.M{"$elemMatch": bson.M{"surname": v}})
+			filter["authors.surname"] = v[0]
 		case "dept":
 			// TODO
 		case "theme":
@@ -43,18 +38,24 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%v", filter)
+	log.Printf("%v", filter) // TODO
 
 	cursor, err := handler.db.Collection(database.CITATIONS).Find(context.TODO(), bsonFilter)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var results []database.Citation
-	cursor.All(context.TODO(), &results)
+	err = cursor.All(context.TODO(), &results)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	resultsString := html.EscapeString(fmt.Sprintf("%v", results))
-	message := fmt.Sprintf("<!DOCTYPE html><html><body><pre>%v</pre></body></html>", resultsString)
-	w.Write([]byte(message))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(results)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Main() {

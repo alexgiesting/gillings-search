@@ -52,16 +52,17 @@ type Citation struct {
 	Abstract     string
 	CitedByCount int
 	Keywords     []string
-	SID          string
+	EID          string
 	Authors      []Author
 	Affiliations []Affiliation
 	Status       Status
 }
 
 type Author struct {
-	Faculty
-	Local       bool
-	Affiliation string
+	GivenName string
+	Surname   string
+	SID       string
+	AffilIDs  []string
 }
 
 type Affiliation struct {

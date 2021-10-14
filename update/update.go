@@ -40,7 +40,6 @@ import (
 // 	Facets           string `json:"facets"`
 // }
 
-// TODO not all fields are retrieved unless using a subscriber IP address
 type ScopusResult struct {
 	Results struct {
 		Citations []Entry `json:"entry"`
@@ -49,28 +48,21 @@ type ScopusResult struct {
 }
 
 type Entry struct {
-	SID          string `json:"dc:identifier"`
-	Title        string `json:"dc:title"`
-	Author       string `json:"dc:creator"`
-	PubType      string `json:"prism:aggregationType"`
-	PubName      string `json:"prism:publicationName"`
-	SubType      string `json:"subtypeDescription"`
-	Volume       string `json:"prism:volume"`
-	Pages        string `json:"prism:pageRange"`
-	Date         string `json:"prism:coverDisplayDate"`
-	ISODate      string `json:"prism:coverDate"`
-	DOI          string `json:"prism:doi"`
-	Abstract     string `json:"dc:description"`
-	CitedByCount string `json:"citedby-count"`
-	Keywords     string `json:"authkeywords"`
-	Authors      []struct {
-		SID            string `json:"authid"`
-		Name           string `json:"authname"`
-		GivenName      string `json:"given-name"`
-		Surname        string `json:"surname"`
-		Initials       string `json:"initials"`
-		AffiliationSID string `json:"afid"`
-	} `json:"author"`
+	EID          string        `json:"eid"`
+	Title        string        `json:"dc:title"`
+	Author       string        `json:"dc:creator"`
+	PubType      string        `json:"prism:aggregationType"`
+	PubName      string        `json:"prism:publicationName"`
+	SubType      string        `json:"subtypeDescription"`
+	Volume       string        `json:"prism:volume"`
+	Pages        string        `json:"prism:pageRange"`
+	Date         string        `json:"prism:coverDisplayDate"`
+	ISODate      string        `json:"prism:coverDate"`
+	DOI          string        `json:"prism:doi"`
+	Abstract     string        `json:"dc:description"`
+	CitedByCount string        `json:"citedby-count"`
+	Keywords     string        `json:"authkeywords"`
+	Authors      []EntryAuthor `json:"author"`
 	Affiliations []struct {
 		SID     string `json:"afid"`
 		Name    string `json:"affilname"`
@@ -79,16 +71,28 @@ type Entry struct {
 	} `json:"affiliation"`
 }
 
+type EntryAuthor struct {
+	SID          string `json:"authid"`
+	Name         string `json:"authname"`
+	GivenName    string `json:"given-name"`
+	Surname      string `json:"surname"`
+	Initials     string `json:"initials"`
+	Affiliations []struct {
+		SID string `json:"$"`
+	} `json:"afid"`
+}
+
 func addCitations(db *mongo.Database) {
 	apiKey, present := os.LookupEnv(paths.ENV_SCOPUS_API_KEY)
 	if !present {
 		log.Fatal("Scopus API key missing")
 	}
+	apiClient, _ := os.LookupEnv(paths.ENV_SCOPUS_CLIENT_ADDRESS)
 
 	for _, sid := range getSIDs(db) {
-		result := queryScopus(sid, apiKey)
+		result := queryScopus(sid, apiKey, apiClient)
 		for _, entry := range result.Results.Citations {
-			check := db.Collection(database.CITATIONS).FindOne(context.TODO(), bson.M{"sid": entry.SID})
+			check := db.Collection(database.CITATIONS).FindOne(context.TODO(), bson.M{"eid": entry.EID})
 			if check.Err() == mongo.ErrNoDocuments {
 				addCitation(db, &entry) // TODO use chan instead
 			} else if check.Err() != nil {
@@ -116,15 +120,18 @@ func getSIDs(db *mongo.Database) []string {
 	return sids
 }
 
-func queryScopus(sid string, apiKey string) ScopusResult {
+func queryScopus(sid string, apiKey string, apiClient string) ScopusResult {
 	query := url.QueryEscape(fmt.Sprintf("AU-ID(%s)", sid))
-	url := fmt.Sprintf("https://api.elsevier.com/content/search/scopus?query=%s", query)
+	url := fmt.Sprintf("https://api.elsevier.com/content/search/scopus?query=%s&view=COMPLETE", query)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("X-ELS-APIKey", apiKey)
+	if apiClient != "" {
+		request.Header.Set("X-Forwarded-For", apiClient)
+	}
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -157,8 +164,8 @@ func addCitation(db *mongo.Database, entry *Entry) {
 		Abstract:     entry.Abstract,
 		CitedByCount: entry.getCitedByCount(),
 		Keywords:     entry.getKeywords(),
-		SID:          entry.SID[len("SCOPUS_ID:"):],
-		Authors:      entry.getAuthors(db),
+		EID:          entry.EID,
+		Authors:      entry.getAuthors(),
 		Affiliations: entry.getAffiliations(),
 		Status:       database.STATUS_UNCONFIRMED,
 	})
@@ -184,35 +191,18 @@ func (entry *Entry) getKeywords() []string {
 	}
 }
 
-func (entry *Entry) getAuthors(db *mongo.Database) []database.Author {
+func (entry *Entry) getAuthors() []database.Author {
 	authors := make([]database.Author, len(entry.Authors))
 	for i, author := range entry.Authors {
-		// TODO probably precompute this?
-		check := db.Collection(database.FACULTY).FindOne(context.TODO(), bson.M{"sid": bson.M{"$elemMatch": author.SID}})
-		if check.Err() == mongo.ErrNoDocuments {
-			authors[i] = database.Author{
-				Faculty: database.Faculty{
-					GivenName: author.GivenName,
-					Surname:   author.Surname,
-					Title:     "",
-					SID:       []string{author.SID},
-				},
-				Local:       false,
-				Affiliation: author.AffiliationSID,
-			}
-		} else if check.Err() != nil {
-			log.Fatal(check.Err())
-		} else {
-			var faculty database.Faculty
-			err := check.Decode(faculty)
-			if err != nil {
-				log.Fatal(err)
-			}
-			authors[i] = database.Author{
-				Faculty:     faculty,
-				Local:       true,
-				Affiliation: author.AffiliationSID,
-			}
+		affiliations := make([]string, len(author.Affiliations))
+		for i, affiliation := range author.Affiliations {
+			affiliations[i] = affiliation.SID
+		}
+		authors[i] = database.Author{
+			GivenName: author.GivenName,
+			Surname:   author.Surname,
+			SID:       author.SID,
+			AffilIDs:  affiliations,
 		}
 	}
 	return authors

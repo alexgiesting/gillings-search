@@ -56,6 +56,7 @@ func runServices() {
 	os.Setenv(paths.ENV_QUERY_PORT, QUERY_PORT)
 	os.Setenv(paths.ENV_UPDATE_PORT, UPDATE_PORT)
 	loadKey(paths.ENV_SCOPUS_API_KEY, "scopus.key")
+	loadKey(paths.ENV_SCOPUS_CLIENT_ADDRESS, "subscriber.key")
 	loadKey(paths.ENV_UPDATE_KEY, "update.key")
 
 	// TODO prefix logs with process name, so we can tell them apart
