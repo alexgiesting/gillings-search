@@ -50,7 +50,7 @@ const (
 	SERVER_PORT = ":3000"
 	QUERY_PORT  = ":3001"
 	UPDATE_PORT = ":3002"
-)
+) // TODO these shouldn't really be on different domains/ports
 
 func runServices() {
 	os.Setenv(paths.ENV_QUERY_PORT, QUERY_PORT)
