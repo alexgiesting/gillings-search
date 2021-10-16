@@ -98,7 +98,10 @@ func addCitations(db *database.Connection) {
 				addCitation(db, &entry) // TODO use chan instead?
 			}
 		}
-		break // TODO make partial version for testing
+		break
+		// TODO make testing version
+		// TODO make a version that only adds recent results
+		// TODO make sure process can recover from interruptions
 	}
 }
 
@@ -276,7 +279,7 @@ func Main() {
 		case r := <-handler.request:
 			switch r {
 			case PULL:
-				addCitations(db) // TODO make a version that only adds recent results
+				addCitations(db)
 			case INITIALIZE:
 				db.Init()
 			case RESET:
