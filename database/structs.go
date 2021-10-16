@@ -20,8 +20,10 @@ type Record struct {
 
 type Theme struct {
 	Name      string `xml:"name,attr"`
+	Abbr      string `xml:"abbr,attr"`
 	SubThemes []struct {
 		Name        string   `xml:"name,attr"`
+		Abbr        string   `xml:"abbr,attr"`
 		Description string   `xml:"description"`
 		Keywords    []string `xml:"keywords>kw"`
 	} `xml:"subtheme"`
@@ -32,6 +34,13 @@ type Faculty struct {
 	Surname   string
 	Title     string
 	SID       []string
+	Email     string
+	Strengths []Strength
+}
+
+type Strength struct {
+	Theme    string
+	SubTheme string
 }
 
 type Department struct {

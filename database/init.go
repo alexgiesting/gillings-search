@@ -114,13 +114,17 @@ func initFaculty(db *mongo.Database) {
 		for c, label := range lines[0] {
 			fields[label] = row[c]
 		}
+
 		name := strings.Split(fields["Name"], ", ")
 		sid := strings.Split(fields["Scopus ID"], ",")
+		strengths := getStrengths(fields["Strengths"])
 		faculty[r] = Faculty{
 			GivenName: name[1],
 			Surname:   name[0],
 			Title:     fields["Title"],
 			SID:       sid,
+			Email:     fields["E-mail"],
+			Strengths: strengths,
 		}
 		departments[fields["Department"]] = append(departments[fields["Department"]], sid...)
 	}
@@ -141,6 +145,20 @@ func initFaculty(db *mongo.Database) {
 	pop(db)
 }
 
+func getStrengths(strengthsString string) []Strength {
+	if strengthsString == "" {
+		return []Strength{}
+	}
+	strengthsStrings := strings.Split(strengthsString, ",")
+	strengths := make([]Strength, len(strengthsStrings))
+	for i, strength := range strengthsStrings {
+		parts := strings.Split(strength, ":")
+		strengths[i].Theme = parts[0]
+		strengths[i].SubTheme = parts[1]
+	}
+	return strengths
+}
+
 func initThemes(db *mongo.Database) {
 	drop(db, THEMES)
 
@@ -153,12 +171,14 @@ func initThemes(db *mongo.Database) {
 		log.Fatal(err)
 	}
 
-	themes := make([]Theme, 0, 10)
+	var themes struct {
+		Themes []Theme `xml:"theme"`
+	}
 	err = xml.Unmarshal(themesBytes, &themes)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, theme := range themes {
+	for _, theme := range themes.Themes {
 		_, err = db.Collection(THEMES).InsertOne(context.TODO(), theme)
 		if err != nil {
 			log.Fatal(err)
