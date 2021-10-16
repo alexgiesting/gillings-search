@@ -21,8 +21,8 @@ const (
 	THEMES      = "Themes"
 )
 
-func (conn *Connection) Init() {
-	db := conn.db
+func (connection *Connection) Init() {
+	db := connection.db
 	colls := make(map[string]bool)
 	names, err := db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
