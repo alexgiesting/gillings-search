@@ -15,9 +15,6 @@ import (
 
 	"github.com/alexgiesting/gillings-search/database"
 	"github.com/alexgiesting/gillings-search/paths"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // type ScopusQuery struct {
@@ -83,7 +80,7 @@ type EntryAuthor struct {
 	} `json:"afid"`
 }
 
-func addCitations(db *mongo.Database) {
+func addCitations(db *database.Connection) {
 	apiKey, present := os.LookupEnv(paths.ENV_SCOPUS_API_KEY)
 	if !present {
 		log.Fatal("Scopus API key missing")
@@ -93,30 +90,28 @@ func addCitations(db *mongo.Database) {
 	for _, sid := range getSIDs(db) {
 		result := queryScopus(sid, apiKey, apiClient)
 		for _, entry := range result.Results.Citations {
-			check := db.Collection(database.CITATIONS).FindOne(context.TODO(), bson.M{"eid": entry.EID})
-			if check.Err() == mongo.ErrNoDocuments {
+			exists, err := db.Citations.Filter("eid", entry.EID).Check()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if !exists {
 				addCitation(db, &entry) // TODO use chan instead?
-			} else if check.Err() != nil {
-				log.Fatal(check.Err())
 			}
 		}
 		break // TODO make partial version for testing
 	}
 }
 
-func getSIDs(db *mongo.Database) []string {
-	cursor, err := db.Collection(database.FACULTY).Find(context.TODO(), bson.D{}, options.Find().SetProjection(bson.M{"sid": 1}))
+func getSIDs(db *database.Connection) []string {
+	var sidLists []struct{ SID []string }
+	err := db.Faculty.Project("sid").Decode(&sidLists)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sids := make([]string, 0, cursor.RemainingBatchLength())
-	for cursor.Next(context.TODO()) {
-		var sidList struct {
-			SIDs []string `bson:"sid"`
-		}
-		cursor.Decode(&sidList)
-		sids = append(sids, sidList.SIDs...)
+	var sids []string
+	for _, sidList := range sidLists {
+		sids = append(sids, sidList.SID...)
 	}
 	return sids
 }
@@ -151,8 +146,8 @@ func queryScopus(sid string, apiKey string, apiClient string) ScopusResult {
 	return result
 }
 
-func addCitation(db *mongo.Database, entry *Entry) {
-	citation, err := bson.Marshal(database.Citation{
+func addCitation(db *database.Connection, entry *Entry) {
+	err := db.Citations.Insert(database.Citation{
 		Title:        entry.Title,
 		PubType:      entry.PubType,
 		PubName:      entry.PubName,
@@ -173,7 +168,6 @@ func addCitation(db *mongo.Database, entry *Entry) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.Collection(database.CITATIONS).InsertOne(context.TODO(), citation)
 }
 
 func (entry *Entry) getCitedByCount() int {
@@ -262,9 +256,9 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Main() {
-	client, db := database.Connect()
-	defer client.Disconnect(context.TODO())
-	database.Init(db)
+	db := database.Connect()
+	defer db.Disconnect(context.TODO())
+	db.Init()
 
 	serveMux := http.NewServeMux()
 	handler := QueryHandler{make(chan Request)}
@@ -284,10 +278,10 @@ func Main() {
 			case PULL:
 				addCitations(db) // TODO make a version that only adds recent results
 			case INITIALIZE:
-				database.Init(db)
+				db.Init()
 			case RESET:
-				db.Collection(database.META).Drop(context.TODO()) // TODO better db interface
-				database.Init(db)
+				db.Clear(context.TODO())
+				db.Init()
 			}
 		case <-ticker.C:
 			addCitations(db)

@@ -21,7 +21,8 @@ const (
 	THEMES      = "Themes"
 )
 
-func Init(db *mongo.Database) {
+func (conn *Connection) Init() {
+	db := conn.db
 	colls := make(map[string]bool)
 	names, err := db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {

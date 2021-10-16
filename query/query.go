@@ -10,42 +10,31 @@ import (
 	"github.com/alexgiesting/gillings-search/database"
 	"github.com/alexgiesting/gillings-search/paths"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type QueryHandler struct {
-	db *mongo.Database
+	db *database.Connection
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// path := r.URL.Path[len(paths.PATH_QUERY):] // TODO
 	query := r.URL.Query()
 
-	filter := make(map[string]interface{})
+	search := handler.db.Citations.Search()
 	for k, v := range query {
 		switch k {
 		case "keyword":
-			// TODO
+			search.Filter("keywords", bson.M{"$in": v})
 		case "faculty":
-			filter["authors.surname"] = v[0]
-		case "dept":
-			// TODO
-		case "theme":
-			// TODO
+			search.Filter("authors.surname", bson.M{"$all": v})
+		case "dept": // TODO
+		case "theme": // TODO
 		}
 	}
-	bsonFilter, err := bson.Marshal(filter)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("%v", filter) // TODO
+	log.Printf("%v", search) // TODO
 
-	cursor, err := handler.db.Collection(database.CITATIONS).Find(context.TODO(), bsonFilter)
-	if err != nil {
-		log.Fatal(err)
-	}
 	var results []database.Citation
-	err = cursor.All(context.TODO(), &results)
+	err := search.Decode(&results)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,8 +48,8 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Main() {
-	client, db := database.Connect()
-	defer client.Disconnect(context.TODO())
+	db := database.Connect()
+	defer db.Disconnect(context.TODO())
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle(paths.PATH_QUERY, &QueryHandler{db})

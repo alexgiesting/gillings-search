@@ -11,7 +11,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Connect() (*mongo.Client, *mongo.Database) {
+type Connection struct {
+	db          *mongo.Database
+	client      *mongo.Client
+	meta        *Collection
+	Departments *Collection
+	Faculty     *Collection
+	Citations   *Collection
+	Themes      *Collection
+}
+
+func (conn *Connection) Disconnect(ctx context.Context) error {
+	return conn.client.Disconnect(ctx)
+}
+
+func (conn *Connection) Clear(ctx context.Context) error {
+	return conn.meta.Drop(ctx)
+}
+
+func Connect() *Connection {
 	DB_HOST := os.Getenv(paths.ENV_MONGODB_HOST)
 	DB_PORT := os.Getenv(paths.ENV_MONGODB_PORT)
 	DB_ADMIN_PASSWORD := os.Getenv(paths.ENV_MONGODB_ADMIN_PASSWORD)
@@ -28,5 +46,13 @@ func Connect() (*mongo.Client, *mongo.Database) {
 	}
 	db := client.Database(DB_NAME)
 
-	return client, db
+	return &Connection{
+		db:          db,
+		client:      client,
+		meta:        &Collection{mongo: db.Collection(META)},
+		Departments: &Collection{mongo: db.Collection(DEPARTMENTS)},
+		Faculty:     &Collection{mongo: db.Collection(FACULTY)},
+		Citations:   &Collection{mongo: db.Collection(CITATIONS)},
+		Themes:      &Collection{mongo: db.Collection(THEMES)},
+	}
 }
