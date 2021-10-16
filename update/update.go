@@ -273,7 +273,7 @@ func Main() {
 
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
-	defer log.Fatal("Poll ended?")
+	defer log.Fatal("Update ended?")
 	for {
 		select {
 		case r := <-handler.request:
