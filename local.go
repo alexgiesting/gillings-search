@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -50,9 +53,20 @@ const (
 	SERVER_PORT = ":3000"
 	QUERY_PORT  = ":3001"
 	UPDATE_PORT = ":3002"
-) // TODO these shouldn't really be on different domains/ports
+)
 
-func runServices() {
+func proxyAtPort(serveMux *http.ServeMux, path string, port string) {
+	url, err := url.Parse(fmt.Sprintf("http://localhost%s/", port))
+	if err != nil {
+		log.Fatal(err)
+	}
+	serveMux.Handle(path, httputil.NewSingleHostReverseProxy(url))
+}
+
+func main() {
+	mongod := runMongod()
+	defer mongod.Kill()
+
 	os.Setenv(paths.ENV_QUERY_PORT, QUERY_PORT)
 	os.Setenv(paths.ENV_UPDATE_PORT, UPDATE_PORT)
 	loadKey(paths.ENV_SCOPUS_API_KEY, "scopus.key")
@@ -63,13 +77,10 @@ func runServices() {
 	//      maybe use contexts?
 	go query.Main()
 	go update.Main()
-}
 
-func main() {
-	mongod := runMongod()
-	defer mongod.Kill()
-
-	go runServices()
-
-	log.Fatal(http.ListenAndServe(SERVER_PORT, http.FileServer(http.Dir("./static"))))
+	serveMux := http.NewServeMux()
+	serveMux.Handle("/", http.FileServer(http.Dir("./static")))
+	proxyAtPort(serveMux, paths.PATH_QUERY, os.Getenv(paths.ENV_QUERY_PORT))
+	proxyAtPort(serveMux, paths.PATH_UPDATE, os.Getenv(paths.ENV_UPDATE_PORT))
+	log.Fatal(http.ListenAndServe(SERVER_PORT, serveMux))
 }

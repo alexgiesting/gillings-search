@@ -24,8 +24,14 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for k, v := range query {
 		switch k {
 		case "keyword":
+			if len(v) == 1 && v[0] == "" { // TODO
+				break
+			}
 			search.Filter("keywords", bson.M{"$in": v})
 		case "faculty":
+			if len(v) == 1 && v[0] == "" { // TODO
+				break
+			}
 			search.Filter("authors.surname", bson.M{"$all": v})
 		case "dept": // TODO
 		case "theme": // TODO
