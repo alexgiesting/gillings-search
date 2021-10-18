@@ -11,10 +11,10 @@ function App(props) {
       <p>
         <form action="/query">
           <label for="faculty">surname</label>
-          <input name="faculty" type="text" value="Agans" />
+          <input name="faculty" type="text" />
           <br />
           <label for="keyword">keyword</label>
-          <input name="keyword" type="text" value="Reliability" />
+          <input name="keyword" type="text" />
           <br />
           <input type="submit" value="Search" />
         </form>
