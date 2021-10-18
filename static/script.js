@@ -24,7 +24,7 @@ function App(props) {
       <p>
         <form
           method="post"
-          action="/update/faculty"
+          action="/update/load/faculty"
           enctype="multipart/form-data"
         >
           <label for="file">upload faculty.csv: </label>
@@ -33,7 +33,7 @@ function App(props) {
         </form>
         <form
           method="post"
-          action="/update/themes"
+          action="/update/load/themes"
           enctype="multipart/form-data"
         >
           <label for="file">upload themes.xml: </label>
