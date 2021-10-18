@@ -55,12 +55,17 @@ type Request struct {
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
+	err := r.ParseMultipartForm(1 << 20)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	query := r.Form
 	if query.Get("key") != os.Getenv(paths.ENV_UPDATE_KEY) {
 		// TODO use userinfo instead?
-		// TODO ignore for testing
-		// http.Error(w, "Not authorized", http.StatusUnauthorized)
-		// return
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
 	}
 
 	path := strings.TrimRight(r.URL.Path[len(paths.PATH_UPDATE):], "/")

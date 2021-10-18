@@ -29,6 +29,9 @@ function App(props) {
         >
           <label for="file">upload faculty.csv: </label>
           <input name="file" type="file" />
+          <br />
+          <label for="key">(password)</label>
+          <input name="key" type="text" />
           <input type="submit" value="Upload" />
         </form>
         <form
@@ -38,6 +41,9 @@ function App(props) {
         >
           <label for="file">upload themes.xml: </label>
           <input name="file" type="file" />
+          <br />
+          <label for="key">(password)</label>
+          <input name="key" type="text" />
           <input type="submit" value="Upload" />
         </form>
       </p>
