@@ -31,12 +31,10 @@ func (db *Connection) LoadFaculty(facultyCSV io.Reader) {
 			fields[label] = row[c]
 		}
 
-		name := strings.Split(fields["Name"], ", ")
 		sid := strings.Split(fields["Scopus ID"], ",")
 		strengths := getStrengths(fields["Strengths"])
 		faculty[r] = Faculty{
-			GivenName: name[1],
-			Surname:   name[0],
+			Name:      fields["Name"],
 			Title:     fields["Title"],
 			SID:       sid,
 			Email:     fields["E-mail"],

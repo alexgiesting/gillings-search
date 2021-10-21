@@ -30,8 +30,7 @@ type Theme struct {
 }
 
 type Faculty struct {
-	GivenName string
-	Surname   string
+	Name      string
 	Title     string
 	SID       []string
 	Email     string
