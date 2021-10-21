@@ -50,9 +50,13 @@ function App(props) {
 
       <p>
         <form action="/update/drop/citations">
+          <label for="key">(password)</label>
+          <input name="key" type="text" />
           <input type="submit" value="Drop citations" />
         </form>
         <form action="/update/pull">
+          <label for="key">(password)</label>
+          <input name="key" type="text" />
           <input type="submit" value="Pull citations" />
         </form>
       </p>

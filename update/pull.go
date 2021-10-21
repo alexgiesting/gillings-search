@@ -22,34 +22,42 @@ func pullCitations(db *database.Connection, startDate string) {
 	}
 	apiClient, _ := os.LookupEnv(paths.ENV_SCOPUS_CLIENT_ADDRESS)
 
-	for _, sid := range getSIDs(db) {
-		result := queryScopus(sid, startDate, apiKey, apiClient)
-		for _, entry := range result.Results.Citations {
-			exists, err := db.Citations.Filter("eid", entry.EID).Check()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if !exists {
-				addCitation(db, &entry)
-			}
+	limiter := make(chan int, 8)
+	for _, sids := range getSIDs(db) {
+		if len(sids) == 0 {
+			continue
 		}
-		break
+
+		limiter <- 1
+		go func(sids []string) {
+			entries := queryScopus(sids, startDate, apiKey, apiClient)
+			for _, entry := range entries {
+				exists, err := db.Citations.Filter("eid", entry.EID).Check()
+				if err != nil {
+					log.Fatal(err)
+				}
+				if !exists {
+					addCitation(db, &entry)
+				}
+			}
+			<-limiter
+		}(sids)
 		// TODO make a version that only adds recent results
 		// TODO make a version that alters records based on faculty changes
 		// TODO make sure process can recover from interruptions
 	}
 }
 
-func getSIDs(db *database.Connection) []string {
+func getSIDs(db *database.Connection) [][]string {
 	var sidLists []struct{ SID []string }
 	err := db.Faculty.Project("sid").Decode(&sidLists)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var sids []string
-	for _, sidList := range sidLists {
-		sids = append(sids, sidList.SID...)
+	sids := make([][]string, len(sidLists))
+	for i, sidList := range sidLists {
+		sids[i] = sidList.SID
 	}
 	return sids
 }
@@ -117,35 +125,63 @@ type EntryAuthor struct {
 	} `json:"afid"`
 }
 
-func queryScopus(sid string, startDate string, apiKey string, apiClient string) ScopusResult {
+func queryScopus(sids []string, startDate string, apiKey string, apiClient string) []Entry {
 	// TODO use date to limit results
-	query := url.QueryEscape(fmt.Sprintf("AU-ID(%s)", sid))
+	// TODO use EID to limit results
+	// TODO monitor rate limits, request ids, errors...
+	// TODO add progress logging
+	fields := make([]string, len(sids))
+	for i, sid := range sids {
+		fields[i] = fmt.Sprintf("AU-ID(%s)", sid)
+	}
+	query := url.QueryEscape(strings.Join(fields, " OR "))
 	url := fmt.Sprintf("https://api.elsevier.com/content/search/scopus?query=%s&view=COMPLETE", query)
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("X-ELS-APIKey", apiKey)
-	if apiClient != "" {
-		request.Header.Set("X-Forwarded-For", apiClient)
+
+	var entries []Entry
+	var start int = 0
+	var count int
+	for {
+		startField := fmt.Sprintf("&start=%d", start)
+		request, err := http.NewRequest("GET", url+startField, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		request.Header.Set("Accept", "application/json")
+		request.Header.Set("X-ELS-APIKey", apiKey)
+		if apiClient != "" {
+			request.Header.Set("X-Forwarded-For", apiClient)
+		}
+
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			log.Fatal(err)
+		}
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var result ScopusResult
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if start == 0 {
+			i, err := strconv.Atoi(result.Results.Count)
+			if err != nil {
+				log.Fatal(err, url+startField, response, string(body), result)
+			}
+			count = i
+			entries = make([]Entry, 0, count)
+		}
+		entries = append(entries, result.Results.Citations...)
+		start += len(result.Results.Citations)
+		if start >= count {
+			break
+		}
 	}
 
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		log.Fatal(err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var result ScopusResult
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return result
+	return entries
 }
 
 func addCitation(db *database.Connection, entry *Entry) {
