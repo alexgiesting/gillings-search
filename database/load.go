@@ -24,21 +24,24 @@ func (db *Connection) LoadFaculty(facultyCSV io.Reader) {
 		log.Fatal(err)
 	}
 
+	fields := make(map[string]int)
+	for c, label := range lines[0] {
+		fields[label] = c
+	}
+	NAME := fields["Name"]
+	TITLE := fields["Title"]
+	SID := fields["Scopus ID"]
+	EMAIL := fields["E-mail"]
+	STRENGTHS := fields["Strengths"]
+
 	faculty := make([]interface{}, len(lines)-1)
 	for r, row := range lines[1:] {
-		fields := make(map[string]string)
-		for c, label := range lines[0] {
-			fields[label] = row[c]
-		}
-
-		sid := strings.Split(fields["Scopus ID"], ",")
-		strengths := getStrengths(fields["Strengths"])
 		faculty[r] = Faculty{
-			Name:      fields["Name"],
-			Title:     fields["Title"],
-			SID:       sid,
-			Email:     fields["E-mail"],
-			Strengths: strengths,
+			Name:      row[NAME],
+			Title:     row[TITLE],
+			SID:       getSIDs(row[SID]),
+			Email:     row[EMAIL],
+			Strengths: getStrengths(row[STRENGTHS]),
 		}
 	}
 
@@ -46,6 +49,13 @@ func (db *Connection) LoadFaculty(facultyCSV io.Reader) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getSIDs(sidsString string) []string {
+	if sidsString == "" {
+		return []string{}
+	}
+	return strings.Split(sidsString, ",")
 }
 
 func getStrengths(strengthsString string) []Strength {
