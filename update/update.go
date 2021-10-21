@@ -55,14 +55,8 @@ type Request struct {
 }
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(1 << 20)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	query := r.Form
-	if query.Get("key") != os.Getenv(paths.ENV_UPDATE_KEY) {
+	// TODO maybe not form?
+	if r.FormValue("key") != os.Getenv(paths.ENV_UPDATE_KEY) {
 		// TODO use userinfo instead?
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
@@ -89,7 +83,7 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprintln(w, "command received")
 
-	handler.request <- Request{path, query, body}
+	handler.request <- Request{path, r.Form, body}
 }
 
 func Main() {
