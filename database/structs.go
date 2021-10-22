@@ -37,9 +37,9 @@ type Faculty struct {
 	Strengths []Strength
 }
 
-type Strength struct { // TODO
-	Theme    string
-	SubTheme string
+type Strength struct {
+	ThemeAbbr    string
+	SubThemeAbbr string
 }
 
 type Department struct { // TODO

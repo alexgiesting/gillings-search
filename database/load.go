@@ -66,8 +66,8 @@ func getStrengths(strengthsString string) []Strength {
 	strengths := make([]Strength, len(strengthsStrings))
 	for i, strength := range strengthsStrings {
 		parts := strings.Split(strength, ":")
-		strengths[i].Theme = parts[0]
-		strengths[i].SubTheme = parts[1]
+		strengths[i].ThemeAbbr = parts[0]
+		strengths[i].SubThemeAbbr = parts[1]
 	}
 	return strengths
 }
