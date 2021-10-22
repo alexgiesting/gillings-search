@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// TODO refactor...
+
 type Collection struct {
 	mongo *mongo.Collection
 }
@@ -33,58 +35,52 @@ func (collection *Collection) Decode(results interface{}) error {
 	return cursor.All(context.TODO(), results)
 }
 
+type Search struct {
+	collection *mongo.Collection
+	filter     []bson.D
+	or         [][]bson.D
+	project    bson.D
+}
+type Projection Search
+
 func (collection *Collection) Search() *Search {
-	return &Search{
-		collection: collection.mongo,
-		filters:    make(map[string]interface{}),
-	}
+	return newSearch(collection)
 }
 
 func (collection *Collection) Filter(key string, filter interface{}) *Search {
-	return collection.Search().Filter(key, filter)
+	return newSearch(collection).Filter(key, filter)
 }
 
 func (collection *Collection) Project(includeFields ...string) *Projection {
-	return (&Search{collection: collection.mongo, filters: nil}).Project(includeFields...)
+	return newSearch(collection).Project(includeFields...)
 }
 
-type Search struct {
-	collection *mongo.Collection
-	filters    map[string]interface{}
+func newSearch(collection *Collection) *Search {
+	filter := []bson.D{}
+	or := [][]bson.D{}
+	project := bson.D{}
+	return &Search{collection.mongo, filter, or, project}
+}
+
+func (search *Search) makeFilter() bson.D {
+	filter := search.filter
+	if len(search.or) > 0 {
+		orFilter := make([]bson.D, len(search.or))
+		for i, alternative := range search.or {
+			orFilter[i] = bson.D{{Key: "$and", Value: alternative}}
+		}
+		filter = append(filter, bson.D{{Key: "$or", Value: orFilter}})
+	}
+	return bson.D{{Key: "$and", Value: filter}}
 }
 
 func (search *Search) Filter(key string, filter interface{}) *Search {
-	search.filters[key] = filter
+	search.filter = append(search.filter, bson.D{{Key: key, Value: filter}})
 	return search
 }
 
-func (search *Search) Project(includeFields ...string) *Projection {
-	mapFields := make(map[string]int)
-	for _, field := range includeFields {
-		mapFields[field] = 1
-	}
-	fields, _ := bson.Marshal(mapFields)
-	return &Projection{search, fields}
-}
-
-func (search *Search) Decode(results interface{}) error {
-	bsonFilter, err := bson.Marshal(search.filters)
-	if err != nil {
-		return err
-	}
-	cursor, err := search.collection.Find(context.TODO(), bsonFilter)
-	if err != nil {
-		return err
-	}
-	return cursor.All(context.TODO(), results)
-}
-
 func (search *Search) Check() (bool, error) {
-	bsonFilter, err := bson.Marshal(search.filters)
-	if err != nil {
-		return false, err
-	}
-	result := search.collection.FindOne(context.TODO(), bsonFilter)
+	result := search.collection.FindOne(context.TODO(), search.filter)
 	if result.Err() == mongo.ErrNoDocuments {
 		return false, nil
 	} else if result.Err() != nil {
@@ -94,23 +90,43 @@ func (search *Search) Check() (bool, error) {
 	}
 }
 
-type Projection struct {
-	search *Search
-	fields interface{}
-}
-
-func (projection *Projection) Decode(results interface{}) error {
-	bsonFilter, err := bson.Marshal(projection.search.filters)
-	if err != nil {
-		return err
-	}
-	cursor, err := projection.search.collection.Find(
-		context.TODO(),
-		bsonFilter,
-		options.Find().SetProjection(projection.fields),
-	)
+func (search *Search) Decode(results interface{}) error {
+	cursor, err := search.collection.Find(context.TODO(), search.makeFilter())
 	if err != nil {
 		return err
 	}
 	return cursor.All(context.TODO(), results)
+}
+
+func (search *Search) Project(fields ...string) *Projection {
+	for _, field := range fields {
+		search.project = append(search.project, bson.E{Key: field, Value: 1})
+	}
+	return (*Projection)(search)
+}
+
+func (projection *Projection) Decode(results interface{}) error {
+	filter := (*Search)(projection).makeFilter()
+	option := options.Find().SetProjection(projection.project)
+	cursor, err := projection.collection.Find(context.TODO(), filter, option)
+	if err != nil {
+		return err
+	}
+	return cursor.All(context.TODO(), results)
+}
+
+type Alternative struct {
+	search *Search
+	index  int
+}
+
+func (search *Search) Alternative() *Alternative {
+	index := len(search.or)
+	search.or = append(search.or, []bson.D{})
+	return &Alternative{search, index}
+}
+
+func (alt *Alternative) Filter(key string, filter interface{}) *Alternative {
+	alt.search.or[alt.index] = append(alt.search.or[alt.index], bson.D{{Key: key, Value: filter}})
+	return alt
 }
