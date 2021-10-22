@@ -91,38 +91,37 @@ type ScopusResult struct {
 }
 
 type Entry struct {
-	EID          string        `json:"eid"`
-	Title        string        `json:"dc:title"`
-	Author       string        `json:"dc:creator"`
-	PubType      string        `json:"prism:aggregationType"`
-	PubName      string        `json:"prism:publicationName"`
-	SubType      string        `json:"subtypeDescription"`
-	Volume       string        `json:"prism:volume"`
-	Pages        string        `json:"prism:pageRange"`
-	Date         string        `json:"prism:coverDisplayDate"`
-	ISODate      string        `json:"prism:coverDate"`
-	DOI          string        `json:"prism:doi"`
-	Abstract     string        `json:"dc:description"`
-	CitedByCount string        `json:"citedby-count"`
-	Keywords     string        `json:"authkeywords"`
-	Authors      []EntryAuthor `json:"author"`
+	EID          string `json:"eid"`
+	Title        string `json:"dc:title"`
+	Author       string `json:"dc:creator"`
+	PubType      string `json:"prism:aggregationType"`
+	PubName      string `json:"prism:publicationName"`
+	SubType      string `json:"subtypeDescription"`
+	Volume       string `json:"prism:volume"`
+	Issue        string `json:"prism:issueIdentifier"`
+	Pages        string `json:"prism:pageRange"`
+	Date         string `json:"prism:coverDisplayDate"`
+	ISODate      string `json:"prism:coverDate"`
+	DOI          string `json:"prism:doi"`
+	Abstract     string `json:"dc:description"`
+	CitedByCount string `json:"citedby-count"`
+	Keywords     string `json:"authkeywords"`
+	Authors      []struct {
+		SID          string `json:"authid"`
+		Name         string `json:"authname"`
+		GivenName    string `json:"given-name"`
+		Surname      string `json:"surname"`
+		Initials     string `json:"initials"`
+		Affiliations []struct {
+			SID string `json:"$"`
+		} `json:"afid"`
+	} `json:"author"`
 	Affiliations []struct {
 		SID     string `json:"afid"`
 		Name    string `json:"affilname"`
 		City    string `json:"affiliation-city"`
 		Country string `json:"affiliation-country"`
 	} `json:"affiliation"`
-}
-
-type EntryAuthor struct {
-	SID          string `json:"authid"`
-	Name         string `json:"authname"`
-	GivenName    string `json:"given-name"`
-	Surname      string `json:"surname"`
-	Initials     string `json:"initials"`
-	Affiliations []struct {
-		SID string `json:"$"`
-	} `json:"afid"`
 }
 
 func queryScopus(sids []string, startDate string, apiKey string, apiClient string) []Entry {
@@ -191,6 +190,7 @@ func addCitation(db *database.Connection, entry *Entry) {
 		PubName:      entry.PubName,
 		SubType:      entry.SubType,
 		Volume:       entry.Volume,
+		Issue:        entry.Issue,
 		Pages:        entry.Pages,
 		Date:         entry.Date,
 		ISODate:      entry.ISODate,
@@ -232,8 +232,10 @@ func (entry *Entry) getAuthors() []database.Author {
 			affiliations[i] = affiliation.SID
 		}
 		authors[i] = database.Author{
+			Name:      author.Name,
 			GivenName: author.GivenName,
 			Surname:   author.Surname,
+			Initials:  author.Initials,
 			SID:       author.SID,
 			AffilIDs:  affiliations,
 		}

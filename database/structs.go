@@ -37,12 +37,12 @@ type Faculty struct {
 	Strengths []Strength
 }
 
-type Strength struct {
+type Strength struct { // TODO
 	Theme    string
 	SubTheme string
 }
 
-type Department struct {
+type Department struct { // TODO
 	Name string
 	SIDs []string
 }
@@ -53,6 +53,7 @@ type Citation struct {
 	PubName      string
 	SubType      string
 	Volume       string
+	Issue        string
 	Pages        string
 	Date         string
 	ISODate      string
@@ -67,8 +68,10 @@ type Citation struct {
 }
 
 type Author struct {
+	Name      string
 	GivenName string
 	Surname   string
+	Initials  string
 	SID       string
 	AffilIDs  []string
 }
