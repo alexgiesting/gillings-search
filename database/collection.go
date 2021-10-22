@@ -38,7 +38,6 @@ func (collection *Collection) Decode(results interface{}) error {
 type Search struct {
 	collection *mongo.Collection
 	filter     []bson.D
-	or         [][]bson.D
 	project    bson.D
 }
 type Projection Search
@@ -57,20 +56,12 @@ func (collection *Collection) Project(includeFields ...string) *Projection {
 
 func newSearch(collection *Collection) *Search {
 	filter := []bson.D{}
-	or := [][]bson.D{}
 	project := bson.D{}
-	return &Search{collection.mongo, filter, or, project}
+	return &Search{collection.mongo, filter, project}
 }
 
 func (search *Search) makeFilter() bson.D {
 	filter := search.filter
-	if len(search.or) > 0 {
-		orFilter := make([]bson.D, len(search.or))
-		for i, alternative := range search.or {
-			orFilter[i] = bson.D{{Key: "$and", Value: alternative}}
-		}
-		filter = append(filter, bson.D{{Key: "$or", Value: orFilter}})
-	}
 	return bson.D{{Key: "$and", Value: filter}}
 }
 
@@ -113,20 +104,4 @@ func (projection *Projection) Decode(results interface{}) error {
 		return err
 	}
 	return cursor.All(context.TODO(), results)
-}
-
-type Alternative struct {
-	search *Search
-	index  int
-}
-
-func (search *Search) Alternative() *Alternative {
-	index := len(search.or)
-	search.or = append(search.or, []bson.D{})
-	return &Alternative{search, index}
-}
-
-func (alt *Alternative) Filter(key string, filter interface{}) *Alternative {
-	alt.search.or[alt.index] = append(alt.search.or[alt.index], bson.D{{Key: key, Value: filter}})
-	return alt
 }
