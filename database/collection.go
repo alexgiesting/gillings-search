@@ -2,13 +2,14 @@ package database
 
 import (
 	"context"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// TODO refactor...
+// TODO pare down!!
 
 type Collection struct {
 	mongo *mongo.Collection
@@ -82,6 +83,7 @@ func (search *Search) Check() (bool, error) {
 }
 
 func (search *Search) Decode(results interface{}) error {
+	log.Print(search.makeFilter()) // TODO
 	cursor, err := search.collection.Find(context.TODO(), search.makeFilter())
 	if err != nil {
 		return err

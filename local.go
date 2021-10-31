@@ -78,6 +78,16 @@ func main() {
 	go query.Main()
 	go update.Main()
 
+	// TODO we could use raw bson instead of structs...
+	//      or create a deployment compiler???
+	// req, _ := http.NewRequest("GET", "http://localhost:3001/query?keyword=P%20wave%20indices", nil)
+	// resp, _ := http.DefaultClient.Do(req)
+	// bytes, _ := io.ReadAll(resp.Body)
+	// var bsonRaw bson.Raw
+	// _ = bson.UnmarshalExtJSON(bytes, false, &bsonRaw)
+	// val := bsonRaw.Lookup("Results").Array().Index(0).Value().Document().Lookup("Title")
+	// log.Fatal(val.StringValue())
+
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", http.FileServer(http.Dir("./static")))
 	proxyAtPort(serveMux, paths.PATH_QUERY, os.Getenv(paths.ENV_QUERY_PORT))

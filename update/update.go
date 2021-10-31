@@ -40,7 +40,7 @@ func update(db *database.Connection, r Request) {
 	case "drop/themes":
 		db.Themes.Drop(context.TODO())
 	default:
-		log.Printf("Invalid request `%s` received by `update`\n", r.path)
+		log.Printf("Invalid request `%s` received by `update`", r.path)
 	}
 }
 
@@ -94,7 +94,7 @@ func Main() {
 	handler := QueryHandler{make(chan Request)}
 	serveMux.Handle(paths.PATH_UPDATE, &handler)
 	PORT := os.Getenv(paths.ENV_UPDATE_PORT)
-	log.Printf("Running server on %s\n", PORT)
+	log.Printf("Running server on %s", PORT)
 	go func() { log.Fatal(http.ListenAndServe(PORT, serveMux)) }()
 
 	ticker := time.NewTicker(24 * time.Hour)
