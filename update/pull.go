@@ -121,6 +121,9 @@ type Entry struct {
 		Name    string `json:"affilname"`
 		City    string `json:"affiliation-city"`
 		Country string `json:"affiliation-country"`
+		Alias   []struct {
+			Name string `json:"$"`
+		} `json:"name-variant"`
 	} `json:"affiliation"`
 }
 
@@ -246,11 +249,16 @@ func (entry *Entry) getAuthors() []database.Author {
 func (entry *Entry) getAffiliations() []database.Affiliation {
 	affiliations := make([]database.Affiliation, len(entry.Affiliations))
 	for i, affiliation := range entry.Affiliations {
+		alias := make([]string, len(affiliation.Alias))
+		for j, name := range affiliation.Alias {
+			alias[j] = name.Name
+		}
 		affiliations[i] = database.Affiliation{
 			SID:     affiliation.SID,
 			Name:    affiliation.Name,
 			City:    affiliation.City,
 			Country: affiliation.Country,
+			Alias:   alias,
 		}
 	}
 	return affiliations
