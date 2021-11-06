@@ -13,7 +13,9 @@ COPY src src
 RUN npm run build
 
 # production environment
-FROM nginx:stable-alpine
-COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 80
+FROM registry.access.redhat.com/ubi8/nginx-118
+# COPY ./nginx.conf "${NGINX_CONF_PATH}"
+# COPY ./nginx-default-cfg/*.conf "${NGINX_DEFAULT_CONF_PATH}"
+# COPY ./nginx-cfg/*.conf "${NGINX_CONFIGURATION_PATH}"
+COPY --from=build /app/build .
 CMD ["nginx", "-g", "daemon off;"]
