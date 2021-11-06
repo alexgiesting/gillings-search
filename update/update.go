@@ -22,6 +22,8 @@ func update(db *database.Connection, r Request) {
 		// TODO where should the date come from?
 		startDate := "2021-01-01"
 		pullCitations(db, startDate)
+	case "push":
+		pushCitations(db)
 	case "load/faculty":
 		db.Faculty.Drop(context.TODO())
 		db.LoadFaculty(r.body)
