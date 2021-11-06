@@ -1,9 +1,32 @@
-ReactDOM.render(
-  <App header="Gillings Search Tool" />,
-  document.getElementById("root")
-);
+// import logo from "./logo.svg";
+// import "./App.css";
 
-function App({ header }) {
+// function App() {
+//   return (
+//     <div className="App">
+//       <header className="App-header">
+//         <img src={logo} className="App-logo" alt="logo" />
+//         <p>
+//           Edit <code>src/App.js</code> and save to reload.
+//         </p>
+//         <a
+//           className="App-link"
+//           href="https://reactjs.org"
+//           target="_blank"
+//           rel="noopener noreferrer"
+//         >
+//           Learn React
+//         </a>
+//       </header>
+//     </div>
+//   );
+// }
+
+function App() {
+  return <AppHeader header="Gillings Search Tool" />;
+}
+
+function AppHeader({ header }) {
   return (
     <div>
       <h1>{header}</h1>
@@ -21,7 +44,7 @@ function App({ header }) {
   );
 }
 
-function QueryForm({}) {
+function QueryForm({ _ }) {
   // const [v, setV] = React.useState(3);
   return (
     <form
@@ -29,7 +52,7 @@ function QueryForm({}) {
         event.preventDefault();
         const request = {};
         [...event.target]
-          .filter((input) => input.value != "" && input.name != "")
+          .filter((input) => input.value !== "" && input.name !== "")
           .forEach((input) => {
             request[input.name] = input.value.split(",").map((w) => w.trim());
           });
@@ -88,10 +111,12 @@ function Update({ endpoint, label }) {
   );
 }
 
-function Password({}) {
+function Password({ _ }) {
   return (
     <label>
       (password) <input name="key" type="text" />
     </label>
   );
 }
+
+export default App;
