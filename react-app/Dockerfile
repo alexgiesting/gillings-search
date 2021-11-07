@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 # based on https://mherman.org/blog/dockerizing-a-react-app/
 
 # build environment
@@ -22,6 +24,7 @@ RUN chgrp -R 0 /var/cache/nginx \
 	&& chmod -R g+rwX /var/cache/nginx \
 	&& chown -LR nginx:root /var/cache/nginx
 RUN addgroup nginx root
+USER nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /usr/src/app/build /www
 EXPOSE 8080
