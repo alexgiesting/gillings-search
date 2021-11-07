@@ -104,5 +104,5 @@ func Main() {
 
 	PORT := os.Getenv(paths.ENV_QUERY_PORT)
 	log.Printf("Running server on %s", PORT)
-	log.Fatal(http.ListenAndServe(PORT, serveMux))
+	log.Fatal(http.ListenAndServe(":"+PORT, serveMux))
 }

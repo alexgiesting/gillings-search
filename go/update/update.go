@@ -97,7 +97,7 @@ func Main() {
 	serveMux.Handle(paths.PATH_UPDATE, &handler)
 	PORT := os.Getenv(paths.ENV_UPDATE_PORT)
 	log.Printf("Running server on %s", PORT)
-	go func() { log.Fatal(http.ListenAndServe(PORT, serveMux)) }()
+	go func() { log.Fatal(http.ListenAndServe(":"+PORT, serveMux)) }()
 
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
