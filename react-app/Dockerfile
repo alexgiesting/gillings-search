@@ -14,6 +14,14 @@ RUN npm run build
 
 # production environment
 FROM nginx:1-alpine
+USER root
+RUN chgrp -R 0 /etc/nginx \
+	&& chmod -R g+rwX /etc/nginx \
+	&& chown -LR nginx:root /etc/nginx
+RUN chgrp -R 0 /var/cache/nginx \
+	&& chmod -R g+rwX /var/cache/nginx \
+	&& chown -LR nginx:root /var/cache/nginx
+RUN addgroup nginx root
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /usr/src/app/build /www
 EXPOSE 8080
