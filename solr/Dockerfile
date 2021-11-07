@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM solr:8
 
 USER root
