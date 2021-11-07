@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/alexgiesting/gillings-search/paths"
+	"github.com/alexgiesting/gillings-search/go/paths"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

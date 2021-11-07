@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/alexgiesting/gillings-search/database"
-	"github.com/alexgiesting/gillings-search/paths"
+	"github.com/alexgiesting/gillings-search/go/database"
+	"github.com/alexgiesting/gillings-search/go/paths"
 	"go.mongodb.org/mongo-driver/bson"
 )
 

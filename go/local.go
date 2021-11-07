@@ -11,9 +11,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/alexgiesting/gillings-search/paths"
-	"github.com/alexgiesting/gillings-search/query"
-	"github.com/alexgiesting/gillings-search/update"
+	"github.com/alexgiesting/gillings-search/go/paths"
+	"github.com/alexgiesting/gillings-search/go/query"
+	"github.com/alexgiesting/gillings-search/go/update"
 )
 
 func runMongod() *os.Process {

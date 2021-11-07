@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexgiesting/gillings-search/database"
-	"github.com/alexgiesting/gillings-search/paths"
+	"github.com/alexgiesting/gillings-search/go/database"
+	"github.com/alexgiesting/gillings-search/go/paths"
 )
 
 func update(db *database.Connection, r Request) {

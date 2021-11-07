@@ -1,4 +1,4 @@
-module github.com/alexgiesting/gillings-search
+module github.com/alexgiesting/gillings-search/go
 
 go 1.16
 

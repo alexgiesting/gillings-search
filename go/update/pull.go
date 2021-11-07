@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alexgiesting/gillings-search/database"
-	"github.com/alexgiesting/gillings-search/paths"
+	"github.com/alexgiesting/gillings-search/go/database"
+	"github.com/alexgiesting/gillings-search/go/paths"
 )
 
 func pullCitations(db *database.Connection, startDate string) {

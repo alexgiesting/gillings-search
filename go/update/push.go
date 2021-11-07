@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alexgiesting/gillings-search/database"
+	"github.com/alexgiesting/gillings-search/go/database"
 )
 
 type Searchable struct {
