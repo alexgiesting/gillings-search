@@ -20,9 +20,9 @@ USER root
 RUN chgrp -R 0 /etc/nginx \
 	&& chmod -R g+rwX /etc/nginx \
 	&& chown -LR nginx:root /etc/nginx
-RUN chgrp -R 0 /var \
-	&& chmod -R g+rwX /var \
-	&& chown -LR nginx:root /var
+RUN chgrp -R 0 /var/log/nginx \
+	&& chmod -R g+rwX /var/log/nginx \
+	&& chown -LR nginx:root /var/log/nginx
 RUN addgroup nginx root
 USER nginx
 RUN rm /etc/nginx/conf.d/default.conf
