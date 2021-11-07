@@ -13,7 +13,8 @@ COPY src src
 RUN npm run build
 
 # production environment
-FROM nginx:stable-alpine
-COPY --from=build /usr/src/app/build /usr/share/nginx/html
+FROM nginx:1.17
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /usr/src/app/build /www
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
