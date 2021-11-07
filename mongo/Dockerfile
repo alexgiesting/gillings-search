@@ -7,6 +7,6 @@ RUN chgrp -R 0 /var/mongodb \
 	&& chmod -R g+rwX /var/mongodb \
 	&& chown -LR mongodb:mongodb /var/mongodb
 
-COPY mongod.conf mongod.conf
+COPY mongod.conf /etc/mongod.conf
 
-CMD [ "mongod", "--config", "mongod.conf" ]
+CMD [ "mongod", "--config", "/etc/mongod.conf" ]
