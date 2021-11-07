@@ -26,7 +26,7 @@ func runMongod() *os.Process {
 	if err != nil {
 		log.Fatal(err)
 	}
-	MONGOD_ARGV := strings.Split("mongod --config ./mongodb/mongod.cfg", " ")
+	MONGOD_ARGV := strings.Split("mongod --config ../local/mongodb/mongod.cfg", " ")
 	procAttr := os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
 	mongod, err := os.StartProcess(MONGOD_PATH, MONGOD_ARGV, &procAttr)
 	if err != nil {
@@ -37,7 +37,7 @@ func runMongod() *os.Process {
 }
 
 func loadKey(envVariable string, keyFilename string) {
-	keyFile, err := os.Open(keyFilename)
+	keyFile, err := os.Open("../local/keys/" + keyFilename)
 	if err != nil {
 		log.Fatal(err)
 	}
