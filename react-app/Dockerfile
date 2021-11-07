@@ -13,9 +13,7 @@ COPY src src
 RUN npm run build
 
 # production environment
-FROM nginx:1.17
-COPY nginx-os4.conf /etc/nginx/nginx.conf
-WORKDIR /code
-COPY --from=build /usr/src/app/build .
-EXPOSE 8080:8080
+FROM nginx:stable-alpine
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
