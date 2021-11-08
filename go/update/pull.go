@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -15,12 +16,12 @@ import (
 )
 
 func pullCitations(db *database.Connection, startDate string) {
-	apiKey, err := paths.LoadKey(paths.SECRET_SCOPUS_API_KEY)
+	apiKey, err := os.ReadFile(paths.SECRET_SCOPUS_API_KEY)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// TODO only load on local runs
-	apiClient, _ := paths.LoadKey(paths.SECRET_SCOPUS_CLIENT_ADDRESS)
+	apiClient, _ := os.ReadFile(paths.SECRET_SCOPUS_CLIENT_ADDRESS)
 
 	limiter := make(chan int, 8)
 	for _, sids := range getSIDs(db) {
@@ -30,7 +31,7 @@ func pullCitations(db *database.Connection, startDate string) {
 
 		limiter <- 1
 		go func(sids []string) {
-			entries := queryScopus(sids, startDate, apiKey, apiClient)
+			entries := queryScopus(sids, startDate, string(apiKey), string(apiClient))
 			for _, entry := range entries {
 				exists, err := db.Citations.Filter("eid", entry.EID).Check()
 				if err != nil {

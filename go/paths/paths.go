@@ -1,10 +1,5 @@
 package paths
 
-import (
-	"io"
-	"os"
-)
-
 const (
 	ENV_SERVER_PORT            = "GS_SERVER_PORT"         //
 	ENV_QUERY_PORT             = "GS_QUERY_PORT"          // local query
@@ -26,17 +21,3 @@ const (
 	PATH_QUERY  = "/query/"
 	PATH_UPDATE = "/update/"
 )
-
-func LoadKey(keyFilename string) (string, error) {
-	keyFile, err := os.Open(keyFilename)
-	if err != nil {
-		return "", err
-	}
-	defer keyFile.Close()
-
-	apiKey, err := io.ReadAll(keyFile)
-	if err != nil {
-		return "", err
-	}
-	return string(apiKey), nil
-}

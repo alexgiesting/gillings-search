@@ -93,14 +93,13 @@ func Main() {
 	db := database.Connect()
 	defer db.Disconnect(context.TODO())
 
-	updateKey, err := paths.LoadKey(paths.SECRET_UPDATE_KEY)
+	updateKey, err := os.ReadFile(paths.SECRET_UPDATE_KEY)
 	if err != nil {
 		log.Fatal(err)
 	}
-	request := make(chan Request)
 
 	serveMux := http.NewServeMux()
-	handler := QueryHandler{updateKey, request}
+	handler := QueryHandler{string(updateKey), make(chan Request)}
 	serveMux.Handle(paths.PATH_UPDATE, &handler)
 	PORT := os.Getenv(paths.ENV_UPDATE_PORT)
 	log.Printf("Running server on %s", PORT)
