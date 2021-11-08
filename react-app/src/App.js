@@ -1,5 +1,7 @@
+import React from "react";
+
 // import logo from "./logo.svg";
-// import "./App.css";
+import "./App.css";
 
 // function App() {
 //   return (
@@ -22,16 +24,35 @@
 //   );
 // }
 
-function App() {
-  return <AppHeader header="Gillings Search Tool" />;
+function App({ header }) {
+  const [results, setResults] = React.useState([]);
+  return (
+    <div className="base">
+      <h1>Gillings Search Tool</h1>
+      <div className="frame">
+        <Form setResults={setResults} />
+        <div className="right">
+          {results.map((result, i) => (
+            <Result key={i} result={result} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function AppHeader({ header }) {
+function Result({ result }) {
   return (
-    <div>
-      <h1>{header}</h1>
+    <div className="result">
+      {result.Title} ({result.Authors.map((author) => author.Name).join(", ")})
+    </div>
+  );
+}
 
-      <QueryForm />
+function Form({ setResults }) {
+  return (
+    <div className="left">
+      <QueryForm setResults={setResults} />
       <br />
 
       <LoadForm to="faculty" from="faculty.csv" />
@@ -44,8 +65,7 @@ function AppHeader({ header }) {
   );
 }
 
-function QueryForm({ _ }) {
-  // const [v, setV] = React.useState(3);
+function QueryForm({ setResults }) {
   return (
     <form
       onSubmit={async function (event) {
@@ -56,13 +76,13 @@ function QueryForm({ _ }) {
           .forEach((input) => {
             request[input.name] = input.value.split(",").map((w) => w.trim());
           });
-        const result = await fetch(
+        const results = await fetch(
           `/query?q=${encodeURIComponent(JSON.stringify(request))}`,
           {
             method: "GET",
           }
         ).then((response) => response.json());
-        console.log(result);
+        setResults(results);
       }}
     >
       <QueryText name="faculty" label="surnames" />
