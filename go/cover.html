@@ -59,7 +59,7 @@
 				
 				<option value="file1">github.com/alexgiesting/gillings-search/go/database/connect.go (73.3%)</option>
 				
-				<option value="file2">github.com/alexgiesting/gillings-search/go/database/load.go (0.0%)</option>
+				<option value="file2">github.com/alexgiesting/gillings-search/go/database/load.go (85.4%)</option>
 				
 				<option value="file3">github.com/alexgiesting/gillings-search/go/query/query.go (56.2%)</option>
 				
@@ -274,74 +274,76 @@ const (
         THEMES      = "Themes"
 )
 
-func (db *Connection) LoadFaculty(facultyCSV io.Reader) <span class="cov0" title="0">{
+func (db *Connection) LoadFaculty(facultyCSV io.Reader) <span class="cov8" title="1">{
         lines, err := csv.NewReader(facultyCSV).ReadAll()
         if err != nil </span><span class="cov0" title="0">{
                 log.Fatal(err)
         }</span>
 
-        <span class="cov0" title="0">fields := make(map[string]int)
-        for c, label := range lines[0] </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">fields := make(map[string]int)
+        for c, label := range lines[0] </span><span class="cov8" title="1">{
                 fields[label] = c
         }</span>
-        <span class="cov0" title="0">NAME := fields["Name"]
+        <span class="cov8" title="1">NAME := fields["Name"]
+        DEPARTMENT := fields["Department"]
         TITLE := fields["Title"]
         SID := fields["Scopus ID"]
         EMAIL := fields["E-mail"]
         STRENGTHS := fields["Strengths"]
 
         faculty := make([]interface{}, len(lines)-1)
-        for r, row := range lines[1:] </span><span class="cov0" title="0">{
+        for r, row := range lines[1:] </span><span class="cov8" title="1">{
                 faculty[r] = Faculty{
-                        Name:      row[NAME],
-                        Title:     row[TITLE],
-                        SID:       getSIDs(row[SID]),
-                        Email:     row[EMAIL],
-                        Strengths: getStrengths(row[STRENGTHS]),
+                        Name:       row[NAME],
+                        Department: row[DEPARTMENT],
+                        Title:      row[TITLE],
+                        SID:        getSIDs(row[SID]),
+                        Email:      row[EMAIL],
+                        Strengths:  getStrengths(row[STRENGTHS]),
                 }
         }</span>
 
-        <span class="cov0" title="0">_, err = db.Faculty.mongo.InsertMany(context.TODO(), faculty)
+        <span class="cov8" title="1">_, err = db.Faculty.mongo.InsertMany(context.TODO(), faculty)
         if err != nil </span><span class="cov0" title="0">{
                 log.Fatal(err)
         }</span>
 }
 
-func getSIDs(sidsString string) []string <span class="cov0" title="0">{
+func getSIDs(sidsString string) []string <span class="cov8" title="1">{
         if sidsString == "" </span><span class="cov0" title="0">{
                 return []string{}
         }</span>
-        <span class="cov0" title="0">return strings.Split(sidsString, ",")</span>
+        <span class="cov8" title="1">return strings.Split(sidsString, ",")</span>
 }
 
-func getStrengths(strengthsString string) []Strength <span class="cov0" title="0">{
-        if strengthsString == "" </span><span class="cov0" title="0">{
+func getStrengths(strengthsString string) []Strength <span class="cov8" title="1">{
+        if strengthsString == "" </span><span class="cov8" title="1">{
                 return []Strength{}
         }</span>
-        <span class="cov0" title="0">strengthsStrings := strings.Split(strengthsString, ",")
+        <span class="cov8" title="1">strengthsStrings := strings.Split(strengthsString, ",")
         strengths := make([]Strength, len(strengthsStrings))
-        for i, strength := range strengthsStrings </span><span class="cov0" title="0">{
+        for i, strength := range strengthsStrings </span><span class="cov8" title="1">{
                 parts := strings.Split(strength, ":")
                 strengths[i].ThemeAbbr = parts[0]
                 strengths[i].SubThemeAbbr = parts[1]
         }</span>
-        <span class="cov0" title="0">return strengths</span>
+        <span class="cov8" title="1">return strengths</span>
 }
 
-func (db *Connection) LoadThemes(themesXML io.Reader) <span class="cov0" title="0">{
+func (db *Connection) LoadThemes(themesXML io.Reader) <span class="cov8" title="1">{
         themesBytes, err := ioutil.ReadAll(themesXML)
         if err != nil </span><span class="cov0" title="0">{
                 log.Fatal(err)
         }</span>
 
-        <span class="cov0" title="0">var themes struct {
+        <span class="cov8" title="1">var themes struct {
                 Themes []Theme `xml:"theme"`
         }
         err = xml.Unmarshal(themesBytes, &amp;themes)
         if err != nil </span><span class="cov0" title="0">{
                 log.Fatal(err)
         }</span>
-        <span class="cov0" title="0">for _, theme := range themes.Themes </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">for _, theme := range themes.Themes </span><span class="cov8" title="1">{
                 _, err = db.Themes.mongo.InsertOne(context.TODO(), theme)
                 if err != nil </span><span class="cov0" title="0">{
                         log.Fatal(err)

@@ -24,17 +24,18 @@ type Theme struct {
 	SubThemes []struct {
 		Name        string   `xml:"name,attr"`
 		Abbr        string   `xml:"abbr,attr"`
-		Description string   `xml:"description"`
+		Description string   `xml:"definition"`
 		Keywords    []string `xml:"keywords>kw"`
 	} `xml:"subtheme"`
 }
 
 type Faculty struct {
-	Name      string
-	Title     string
-	SID       []string
-	Email     string
-	Strengths []Strength
+	Name       string
+	Department string
+	Title      string
+	SID        []string
+	Email      string
+	Strengths  []Strength
 }
 
 type Strength struct {

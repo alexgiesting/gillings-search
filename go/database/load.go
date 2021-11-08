@@ -29,6 +29,7 @@ func (db *Connection) LoadFaculty(facultyCSV io.Reader) {
 		fields[label] = c
 	}
 	NAME := fields["Name"]
+	DEPARTMENT := fields["Department"]
 	TITLE := fields["Title"]
 	SID := fields["Scopus ID"]
 	EMAIL := fields["E-mail"]
@@ -37,11 +38,12 @@ func (db *Connection) LoadFaculty(facultyCSV io.Reader) {
 	faculty := make([]interface{}, len(lines)-1)
 	for r, row := range lines[1:] {
 		faculty[r] = Faculty{
-			Name:      row[NAME],
-			Title:     row[TITLE],
-			SID:       getSIDs(row[SID]),
-			Email:     row[EMAIL],
-			Strengths: getStrengths(row[STRENGTHS]),
+			Name:       row[NAME],
+			Department: row[DEPARTMENT],
+			Title:      row[TITLE],
+			SID:        getSIDs(row[SID]),
+			Email:      row[EMAIL],
+			Strengths:  getStrengths(row[STRENGTHS]),
 		}
 	}
 
