@@ -61,7 +61,7 @@
 				
 				<option value="file2">github.com/alexgiesting/gillings-search/go/database/load.go (0.0%)</option>
 				
-				<option value="file3">github.com/alexgiesting/gillings-search/go/query/query.go (0.0%)</option>
+				<option value="file3">github.com/alexgiesting/gillings-search/go/query/query.go (56.2%)</option>
 				
 				<option value="file4">github.com/alexgiesting/gillings-search/go/update/pull.go (0.0%)</option>
 				
@@ -372,10 +372,12 @@ type QueryHandler struct {
         db *database.Connection
 }
 
+type Map = map[string]interface{}
+
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
         // path := r.URL.Path[len(paths.PATH_QUERY):] // TODO
         query := r.URL.Query()
-        var querySearch bson.M
+        var querySearch Map
         json.Unmarshal([]byte(query.Get("q")), &amp;querySearch)
 
         search := handler.db.Citations.Filter(makeSearch(querySearch))
@@ -394,26 +396,28 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) <
         }</span>
 }
 
-func d(key string, value interface{}) bson.D <span class="cov0" title="0">{
+func d(key string, value interface{}) bson.D <span class="cov8" title="1">{
         return bson.D{{Key: key, Value: value}}
 }</span>
 
-func makeSearch(document bson.M) (string, []bson.D) <span class="cov0" title="0">{
+func makeSearch(document Map) (string, []bson.D) <span class="cov8" title="1">{
         // TODO limit/paginate results
         // TODO validate fields
         filter := []bson.D{}
-        for k, v := range document </span><span class="cov0" title="0">{
+        for k, v := range document </span><span class="cov8" title="1">{
                 switch k </span>{
-                case "or":<span class="cov0" title="0">
-                        orFilter := []bson.D{}
-                        for _, w := range v.([]interface{}) </span><span class="cov0" title="0">{
-                                orDocument := w.(bson.M)
-                                orFilter = append(orFilter, d(makeSearch(orDocument)))
-                        }</span>
-                        <span class="cov0" title="0">filter = append(filter, d("$or", orFilter))</span>
-                case "keyword":<span class="cov0" title="0">
+                case "or":<span class="cov8" title="1">
+                        for _, w := range v.([]interface{}) </span><span class="cov8" title="1">{
+                                orFilter := []bson.D{}
+                                for _, x := range w.([]interface{}) </span><span class="cov8" title="1">{
+                                        orDocument := x.(Map)
+                                        orFilter = append(orFilter, d(makeSearch(orDocument)))
+                                }</span>
+                                <span class="cov8" title="1">filter = append(filter, d("$or", orFilter))</span>
+                        }
+                case "keyword":<span class="cov8" title="1">
                         filter = append(filter, match(v, "keywords", "title", "abstract"))</span>
-                case "faculty":<span class="cov0" title="0">
+                case "faculty":<span class="cov8" title="1">
                         filter = append(filter, match(v, "authors.name"))</span>
                 // case "dept": // TODO
                 // case "theme": // TODO
@@ -421,34 +425,34 @@ func makeSearch(document bson.M) (string, []bson.D) <span class="cov0" title="0"
                         log.Printf("Unrecognized parameter `%s` with value: %v", k, v)</span>
                 }
         }
-        <span class="cov0" title="0">return "$and", filter</span>
+        <span class="cov8" title="1">return "$and", filter</span>
 }
 
-func match(v interface{}, fields ...string) bson.D <span class="cov0" title="0">{
+func match(v interface{}, fields ...string) bson.D <span class="cov8" title="1">{
         words := v.([]interface{})
-        if len(words) == 1 </span><span class="cov0" title="0">{
+        if len(words) == 1 </span><span class="cov8" title="1">{
                 return matchElement(words[0].(string), fields)
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 filter := make([]bson.D, len(words))
-                for i, word := range words </span><span class="cov0" title="0">{
+                for i, word := range words </span><span class="cov8" title="1">{
                         filter[i] = matchElement(word.(string), fields)
                 }</span>
-                <span class="cov0" title="0">return d("$and", filter)</span>
+                <span class="cov8" title="1">return d("$and", filter)</span>
         }
 }
 
-func matchElement(word string, fields []string) bson.D <span class="cov0" title="0">{
+func matchElement(word string, fields []string) bson.D <span class="cov8" title="1">{
         // TODO figure out how text indices work :(
         // matchWord := d("$text", d("$search", word))
         matchWord := bson.D{{Key: "$regex", Value: "\\b" + word}, {Key: "$options", Value: "i"}}
-        if len(fields) == 1 </span><span class="cov0" title="0">{
+        if len(fields) == 1 </span><span class="cov8" title="1">{
                 return d(fields[0], matchWord)
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 alternatives := make([]bson.D, len(fields))
-                for j, field := range fields </span><span class="cov0" title="0">{
+                for j, field := range fields </span><span class="cov8" title="1">{
                         alternatives[j] = d(field, matchWord)
                 }</span>
-                <span class="cov0" title="0">return d("$or", alternatives)</span>
+                <span class="cov8" title="1">return d("$or", alternatives)</span>
         }
 }
 

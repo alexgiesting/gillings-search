@@ -16,10 +16,12 @@ type QueryHandler struct {
 	db *database.Connection
 }
 
+type Map = map[string]interface{}
+
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// path := r.URL.Path[len(paths.PATH_QUERY):] // TODO
 	query := r.URL.Query()
-	var querySearch map[string]interface{}
+	var querySearch Map
 	json.Unmarshal([]byte(query.Get("q")), &querySearch)
 
 	search := handler.db.Citations.Filter(makeSearch(querySearch))
@@ -42,19 +44,21 @@ func d(key string, value interface{}) bson.D {
 	return bson.D{{Key: key, Value: value}}
 }
 
-func makeSearch(document map[string]interface{}) (string, []bson.D) {
+func makeSearch(document Map) (string, []bson.D) {
 	// TODO limit/paginate results
 	// TODO validate fields
 	filter := []bson.D{}
 	for k, v := range document {
 		switch k {
 		case "or":
-			orFilter := []bson.D{}
 			for _, w := range v.([]interface{}) {
-				orDocument := w.(map[string]interface{})
-				orFilter = append(orFilter, d(makeSearch(orDocument)))
+				orFilter := []bson.D{}
+				for _, x := range w.([]interface{}) {
+					orDocument := x.(Map)
+					orFilter = append(orFilter, d(makeSearch(orDocument)))
+				}
+				filter = append(filter, d("$or", orFilter))
 			}
-			filter = append(filter, d("$or", orFilter))
 		case "keyword":
 			filter = append(filter, match(v, "keywords", "title", "abstract"))
 		case "faculty":
