@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -62,8 +61,12 @@ func newSearch(collection *Collection) *Search {
 }
 
 func (search *Search) makeFilter() bson.D {
-	filter := search.filter
-	return bson.D{{Key: "$and", Value: filter}}
+	if len(search.filter) > 1 {
+		return bson.D{{Key: "$and", Value: search.filter}}
+	} else if len(search.filter) == 1 {
+		return search.filter[0]
+	}
+	return bson.D{}
 }
 
 func (search *Search) Filter(key string, filter interface{}) *Search {
@@ -72,7 +75,7 @@ func (search *Search) Filter(key string, filter interface{}) *Search {
 }
 
 func (search *Search) Check() (bool, error) {
-	result := search.collection.FindOne(context.TODO(), search.filter)
+	result := search.collection.FindOne(context.TODO(), search.makeFilter())
 	if result.Err() == mongo.ErrNoDocuments {
 		return false, nil
 	} else if result.Err() != nil {
@@ -83,7 +86,6 @@ func (search *Search) Check() (bool, error) {
 }
 
 func (search *Search) Decode(results interface{}) error {
-	log.Print(search.makeFilter()) // TODO
 	cursor, err := search.collection.Find(context.TODO(), search.makeFilter())
 	if err != nil {
 		return err
