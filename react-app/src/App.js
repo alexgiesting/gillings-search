@@ -32,9 +32,8 @@ function App({ header }) {
       <div className="frame">
         <Form setResults={setResults} />
         <div className="right">
-          {results.map((result, i) => (
-            <Result key={i} result={result} />
-          ))}
+          {results &&
+            results.map((result, i) => <Result key={i} result={result} />)}
         </div>
       </div>
     </div>
@@ -74,7 +73,9 @@ function QueryForm({ setResults }) {
         [...event.target]
           .filter((input) => input.value !== "" && input.name !== "")
           .forEach((input) => {
-            request[input.name] = input.value.split(",").map((w) => w.trim());
+            request[input.name] = input.value
+              .split(/[ ,]+/)
+              .map((w) => w.trim());
           });
         const results = await fetch(
           `/query?q=${encodeURIComponent(JSON.stringify(request))}`,

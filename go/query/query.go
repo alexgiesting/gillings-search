@@ -84,7 +84,7 @@ func match(v interface{}, fields ...string) bson.D {
 func matchElement(word string, fields []string) bson.D {
 	// TODO figure out how text indices work :(
 	// matchWord := d("$text", d("$search", word))
-	matchWord := bson.D{{Key: "$regex", Value: word}, {Key: "$options", Value: "i"}}
+	matchWord := bson.D{{Key: "$regex", Value: "\\b" + word}, {Key: "$options", Value: "i"}}
 	if len(fields) == 1 {
 		return d(fields[0], matchWord)
 	} else {
