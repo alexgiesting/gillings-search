@@ -16,32 +16,61 @@ services:
       - 3000:3000
 
   react-app:
-    build: ./react-app
+    build:
+      context: .
+      dockerfile: Dockerfile.reactdev
+    volumes:
+      - ./react-app/src:/opt/app/src
+      - ./react-app/public:/opt/app/public
+      - /opt/app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: true
 
   solr:
     build: ./solr
+    ports:
+      - 8983:8983
+    # volumes:
+    #   - ./local/solr:/var/solr
 
   query-server:
-    build: ./query-server
+    build:
+      context: .
+      dockerfile: Dockerfile.godev
+      args:
+        module: ./query-server
+    volumes:
+      - /root/.cache/go-build
     environment:
       GS_QUERY_PORT: 8080
       MONGODB_SERVICE_HOST: mongodb
       MONGODB_SERVICE_PORT: 27017
+      MONGODB_DATABASE: test
 
   update-server:
-    build: ./update-server
+    build:
+      context: .
+      dockerfile: Dockerfile.godev
+      args:
+        module: ./update-server
+    volumes:
+      - /root/.cache/go-build
     environment:
       GS_UPDATE_PORT: 8080
       MONGODB_SERVICE_HOST: mongodb
       MONGODB_SERVICE_PORT: 27017
+      MONGODB_DATABASE: test
+      SOLR_SERVICE_HOST: solr
+      SOLR_SERVICE_PORT: 8983
     secrets:
-      - scopus-key
-      - subscriber-key
+      - scopus.key
+      - subscriber.key
+      - update.key
 
 secrets:
-  scopus-key:
+  scopus.key:
     file: ./local/keys/scopus.key
-  subscriber-key:
+  subscriber.key:
     file: ./local/keys/subscriber.key
-  update-key:
+  update.key:
     file: ./local/keys/update.key
