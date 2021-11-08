@@ -22,9 +22,9 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var querySearch map[string]interface{}
 	json.Unmarshal([]byte(query.Get("q")), &querySearch)
 
-	search := handler.db.Citations.Filter(makeSearch(querySearch))
+	// search := handler.db.Citations.Filter(makeSearch(querySearch))
 	var results []database.Citation
-	err := search.Decode(&results)
+	err := handler.db.Citations.Decode(&results) // search.Decode(&results)
 	if err != nil {
 		log.Fatal(err)
 	}

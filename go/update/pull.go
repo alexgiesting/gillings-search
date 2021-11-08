@@ -3,11 +3,10 @@ package update
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 
@@ -16,11 +15,12 @@ import (
 )
 
 func pullCitations(db *database.Connection, startDate string) {
-	apiKey, present := os.LookupEnv(paths.ENV_SCOPUS_API_KEY)
-	if !present {
-		log.Fatal("Scopus API key missing")
+	apiKey, err := paths.LoadKey(paths.SECRET_SCOPUS_API_KEY)
+	if err != nil {
+		log.Fatal(err)
 	}
-	apiClient, _ := os.LookupEnv(paths.ENV_SCOPUS_CLIENT_ADDRESS)
+	// TODO only load on local runs
+	apiClient, _ := paths.LoadKey(paths.SECRET_SCOPUS_CLIENT_ADDRESS)
 
 	limiter := make(chan int, 8)
 	for _, sids := range getSIDs(db) {
@@ -49,6 +49,7 @@ func pullCitations(db *database.Connection, startDate string) {
 }
 
 func getSIDs(db *database.Connection) [][]string {
+	// TODO this crashes if faculty hasn't been created yet
 	var sidLists []struct{ SID []string }
 	err := db.Faculty.Project("sid").Decode(&sidLists)
 	if err != nil {
@@ -158,7 +159,7 @@ func queryScopus(sids []string, startDate string, apiKey string, apiClient strin
 		if err != nil {
 			log.Fatal(err)
 		}
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 		if err != nil {
 			log.Fatal(err)
 		}

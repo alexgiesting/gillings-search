@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -47,7 +47,8 @@ func update(db *database.Connection, r Request) {
 }
 
 type QueryHandler struct {
-	request chan Request
+	updateKey string
+	request   chan Request
 }
 
 type Request struct {
@@ -58,7 +59,7 @@ type Request struct {
 
 func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// TODO maybe not form?
-	if r.FormValue("key") != os.Getenv(paths.ENV_UPDATE_KEY) {
+	if r.FormValue("key") != handler.updateKey {
 		// TODO use userinfo instead?
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
@@ -66,13 +67,13 @@ func (handler *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	path := strings.TrimRight(r.URL.Path[len(paths.PATH_UPDATE):], "/")
 	var body *bytes.Reader
-	if path[:len("load")] == "load" {
+	if path[:len("load")] == "load" { // TODO I think this throws if the path is too short?
 		file, _, err := r.FormFile("file")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			log.Fatal(err)
 		}
-		bodyBytes, err := ioutil.ReadAll(file)
+		bodyBytes, err := io.ReadAll(file)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Fatal(err)
@@ -92,8 +93,14 @@ func Main() {
 	db := database.Connect()
 	defer db.Disconnect(context.TODO())
 
+	updateKey, err := paths.LoadKey(paths.SECRET_UPDATE_KEY)
+	if err != nil {
+		log.Fatal(err)
+	}
+	request := make(chan Request)
+
 	serveMux := http.NewServeMux()
-	handler := QueryHandler{make(chan Request)}
+	handler := QueryHandler{updateKey, request}
 	serveMux.Handle(paths.PATH_UPDATE, &handler)
 	PORT := os.Getenv(paths.ENV_UPDATE_PORT)
 	log.Printf("Running server on %s", PORT)

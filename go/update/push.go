@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/alexgiesting/gillings-search/go/database"
+	"github.com/alexgiesting/gillings-search/go/paths"
 )
 
 type Searchable struct {
@@ -64,6 +66,9 @@ func pushCitations(db *database.Connection) {
 		close(docs)
 	}()
 
+	host, _ := os.LookupEnv(paths.ENV_SOLR_HOST)
+	port, _ := os.LookupEnv(paths.ENV_SOLR_PORT)
+	url := fmt.Sprintf("http://%s:%s/solr/citations/update?", host, port)
 	body := make([]byte, 0, 64<<10)
 	body = append(body, '[')
 	for {
@@ -75,13 +80,13 @@ func pushCitations(db *database.Connection) {
 		}
 
 		body[len(body)-1] = ']'
-		log.Print(i, len(body))
+		log.Print(i, len(body)) // TODO
 		params := "overwrite=false"
 		if j > 5000 {
 			j = 0
 			params = params + "&commit=true"
 		}
-		request, err := http.NewRequest("POST", "http://localhost:8983/solr/citations/update?"+params, bytes.NewBuffer(body))
+		request, err := http.NewRequest("POST", url+params, bytes.NewBuffer(body))
 		if err != nil {
 			log.Fatal(err)
 		}
