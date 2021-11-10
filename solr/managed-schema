@@ -120,7 +120,7 @@
     <!-- for nested documents (relationship tracking) -->
     <field name="_nest_path_" type="_nest_path_" /><fieldType name="_nest_path_" class="solr.NestPathField" />
 
-    <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
+    <field name="_text_" type="text_en" indexed="true" stored="false" multiValued="true"/>
 
 		<field name="title"   type="text_general" indexed="true" stored="false" multiValued="false"/>
 		<field name="pubtype" type="string"       indexed="true" stored="false" multiValued="false"/>

@@ -65,6 +65,13 @@ func makeSearch(document Map) (string, []bson.D) {
 			filter = append(filter, match(v, "authors.name"))
 		// case "dept": // TODO
 		// case "theme": // TODO
+		case "id":
+			ids := v.([]interface{})
+			in := make([]string, len(ids))
+			for i, id := range ids {
+				in[i] = id.(string)
+			}
+			filter = append(filter, d("eid", d("$in", in)))
 		default:
 			log.Printf("Unrecognized parameter `%s` with value: %v", k, v)
 		}
