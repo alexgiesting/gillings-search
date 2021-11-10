@@ -26,12 +26,12 @@ services:
     environment:
       CHOKIDAR_USEPOLLING: true
 
-  # solr:
-  #   build: ./solr
-  #   ports:
-  #     - 8983:8983
-  #   # volumes:
-  #   #   - ./local/solr:/var/solr
+  solr:
+    build: ./solr
+    ports:
+      - 8983:8983
+    volumes:
+      - ./local/solr:/var/solr
 
   query-server:
     build:

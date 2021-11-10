@@ -33,8 +33,9 @@ ENV SOLR_OPTS="-XX:-UseGCOverheadLimit"
 
 # Create document collections
 # https://github.com/docker-solr/docker-solr/blob/master/scripts/solr-precreate
-RUN [ "init-var-solr" ]
-RUN [ "run-initdb" ]
-RUN [ "precreate-core", "citations" ]
-COPY --chown=solr:solr ./managed-schema /var/solr/data/citations/conf
-# RUN [ "precreate-core", "faculty" ]
+COPY --chown=solr:solr ./managed-schema /tmp/citations/
+CMD init-var-solr && run-initdb && \
+	precreate-core citations && \
+	cp /tmp/citations/managed-schema /var/solr/data/citations/conf/ && \
+	# precreate-core faculty && \
+	solr-foreground
