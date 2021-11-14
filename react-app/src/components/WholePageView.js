@@ -1,12 +1,11 @@
 import React, { Component } from "react";
 
-import { Result, QueryForm, LoadForm, Update  } from "./helpers/helper_functions";
+import { QueryForm, LoadForm, Update } from "./helpers/helper_functions";
 
-import "../App.css"
+import "../App.css";
+import ArticleCard from "./ArticleCard";
 
-
-
-// export default class WholePageView extends Component {} 
+// export default class WholePageView extends Component {}
 
 function WholePageView({ _ }) {
   const [results, setResults] = React.useState([]);
@@ -16,8 +15,9 @@ function WholePageView({ _ }) {
       <LoadForm to="themes" from="themes.xml" />
       <br />
 
-      <Update label="Drop citations" endpoint="drop/citations" />
-      <Update label="Pull citations" endpoint="pull" />
+      <Update label="Drop citations from MongoDB" endpoint="drop/citations" />
+      <Update label="Pull citations from Scopus API" endpoint="pull" />
+      <Update label="Push citations to Solr search DB" endpoint="push" />
       <br />
 
       <h1>Gillings Search Tool</h1>
@@ -25,12 +25,13 @@ function WholePageView({ _ }) {
         <QueryForm setResults={setResults} />
         <div className="right">
           {results &&
-            results.map((result, i) => <Result key={i} result={result} />)}
+            results.map((result, i) => (
+              <ArticleCard key={i} document={result} />
+            ))}
         </div>
       </div>
     </div>
   );
 }
-
 
 export default WholePageView;

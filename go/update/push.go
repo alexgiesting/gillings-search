@@ -43,7 +43,7 @@ func pushCitations(db *database.Connection) {
 			Title:   citation.Title,
 			PubType: fmt.Sprintf("%s %s", citation.PubType, citation.SubType),
 			PubName: fmt.Sprintf("%s %s %s", citation.PubName, citation.Volume, citation.Issue),
-			Date:    fmt.Sprintf("%sT23:59:59Z", citation.ISODate),
+			Date:    fmt.Sprintf("%sT00:00:00Z", citation.ISODate),
 			CitedBy: citation.CitedByCount,
 			Author:  authors,
 			SID:     sids,
