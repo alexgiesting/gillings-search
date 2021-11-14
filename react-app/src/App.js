@@ -11,8 +11,9 @@ function App({ _ }) {
       <LoadForm to="themes" from="themes.xml" />
       <br />
 
-      <Update label="Drop citations" endpoint="drop/citations" />
-      <Update label="Pull citations" endpoint="pull" />
+      <Update label="Drop citations from MongoDB" endpoint="drop/citations" />
+      <Update label="Pull citations from Scopus API" endpoint="pull" />
+      <Update label="Push citations to Solr search DB" endpoint="push" />
       <br />
 
       <h1>Gillings Search Tool</h1>
