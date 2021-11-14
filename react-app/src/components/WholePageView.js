@@ -1,13 +1,9 @@
 import React, { Component } from "react";
 
-import {
-  Result,
-  QueryForm,
-  LoadForm,
-  Update,
-} from "./helpers/helper_functions";
+import { QueryForm, LoadForm, Update } from "./helpers/helper_functions";
 
 import "../App.css";
+import ArticleCard from "./ArticleCard";
 
 // export default class WholePageView extends Component {}
 
@@ -29,7 +25,9 @@ function WholePageView({ _ }) {
         <QueryForm setResults={setResults} />
         <div className="right">
           {results &&
-            results.map((result, i) => <Result key={i} result={result} />)}
+            results.map((result, i) => (
+              <ArticleCard key={i} document={result} />
+            ))}
         </div>
       </div>
     </div>

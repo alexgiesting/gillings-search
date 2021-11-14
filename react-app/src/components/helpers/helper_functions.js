@@ -1,10 +1,5 @@
 import ArticleCard from "../ArticleCard";
 
-export function Result({ result }) {
-  console.log(result);
-  return ArticleCard(result);
-}
-
 export function QueryForm({ setResults }) {
   return (
     <form
@@ -35,11 +30,13 @@ export function QueryForm({ setResults }) {
         setResults(final);
       }}
     >
-      {/* <div style={{ display: "flex", width: "100%" }}>
-          <input name="keyword" type="text" style={{ flexGrow: 1 }} />
-          <input type="submit" value="Search" style={{ marginLeft: "1em" }} />
-        </div> */}
+      {/* Main search bar */}
+      <div style={{ display: "flex", width: "100%" }}>
+        <input name="keyword" type="text" style={{ flexGrow: 1 }} />
+        <input type="submit" value="Search" style={{ marginLeft: "1em" }} />
+      </div>
       <br />
+
       <h4>Filters</h4>
       {/* <QueryText name="strengths" label="Research Strength(s)" />
         <QueryText name="department" label="Department" /> */}
