@@ -16,7 +16,8 @@ export function QueryForm({ setResults }) {
           `/solr/citations/select?${makeQuery(request)}`,
           { method: "GET" }
         ).then((response) => response.json()); // TODO error handling
-        console.log(results);
+        // console.log("fml")
+        // console.log(results);
 
         let final;
         {
