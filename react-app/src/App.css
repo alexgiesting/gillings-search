@@ -36,12 +36,12 @@
   }
 }
 
-.base {
+/* .base {
   padding: 2em;
-}
+} */
 
 .frame {
-  display: flex;
+  /* display: flex; */
 }
 
 .right,
@@ -52,4 +52,8 @@
 
 .result {
   padding: 0.5em;
+}
+
+.articleOfTheDay {
+  justify-content: center;
 }
