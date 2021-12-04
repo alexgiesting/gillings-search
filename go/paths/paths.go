@@ -13,7 +13,7 @@ const (
 	ENV_SOLR_HOST              = "SOLR_SERVICE_HOST"      // local       update TODO
 	ENV_SOLR_PORT              = "SOLR_SERVICE_PORT"      // local       update TODO
 
-	SECRET_DIR                   = "/run/secrets/"
+	SECRET_DIR                   = "/run/gs-secrets/"
 	SECRET_UPDATE_KEY            = SECRET_DIR + "update.key"     // local       update
 	SECRET_SCOPUS_API_KEY        = SECRET_DIR + "scopus.key"     // local       update
 	SECRET_SCOPUS_CLIENT_ADDRESS = SECRET_DIR + "subscriber.key" // local
