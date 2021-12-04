@@ -11,3 +11,119 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.base {
+  background-color: #82c3ee;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  grid-template-rows: 10vh 10vh 40vh 40vh;
+  gap: 20px 20px;
+  padding-top: none;
+  padding-right: none;
+  padding-left: none;
+  width: 100vw;
+  height: 100%;
+}
+.grider {
+  /*background-color: rgb(172, 172, 172); */
+  background-color: rgb(194, 193, 193);
+  grid-column: 2/3;
+  grid-row: 3/5;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 10% 80% 10%;
+  margin-right: 2em;
+  height: 80vh;
+}
+.citations {
+  background-color: rgb(194, 193, 193);
+  grid-row: 3/5;
+  grid-column: 0/1;
+  text-align: center;
+  margin-left: 2em;
+  height: 80vh;
+}
+.frame {
+  margin-top: 5vh;
+  background-color: white;
+  grid-column: 2/4;
+  grid-row: 2/3;
+  border-radius: 2em;
+}
+.header {
+  color: white;
+  font-size: 10vh;
+  grid-row: 2/3;
+  grid-column: 1/3;
+  justify-self: center;
+}
+#title {
+  grid-row: 1/2;
+  grid-column: 1/5;
+  color: white;
+  justify-self: center;
+}
+#spacer {
+  margin-top: 30%;
+}
+.navi {
+  background-color: black;
+  display: grid;
+  grid-row: 0/2;
+  grid-column: 1/3;
+  height: 100%;
+  color: white;
+  grid-template-columns: 10vw 30vw 10vw 10vw 10vw 10vw 10vw 10vw;
+}
+.logo {
+  width: 300px;
+  height: 40px;
+  margin-top: 10px;
+  grid-template-columns: 1/3;
+}
+.naviblock {
+  width: 9vw;
+  height: 10vh;
+  text-align: center;
+  line-height: 10vh;
+  font-size: 20px;
+  transition: background-color 0.2s ease-in-out;
+}
+.naviblock:hover {
+  background-color: white;
+  color: black;
+}
+a {
+  color: white;
+  width: 9vw;
+  height: 10vh;
+  text-align: center;
+  line-height: 10vh;
+  font-size: 20px;
+  transition: background-color 0.2s ease-in-out;
+  text-decoration: none;
+}
+a:hover {
+  background-color: white;
+  color: black;
+}
+
+.ArticleLink {
+  color: black;
+  line-height: 5vh;
+  font-size: 18px;
+}
+
+.ArticleLink:hover {
+  color: rgb(116, 174, 228);
+}
+
+.right {
+  padding-left: 5px;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.articleOfTheDay {
+  text-align: center;
+}

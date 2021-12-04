@@ -36,12 +36,12 @@
   }
 }
 
-.base {
+/* .base {
   padding: 2em;
-}
+} */
 
 .frame {
-  display: flex;
+  /* display: flex; */
 }
 
 .right,
