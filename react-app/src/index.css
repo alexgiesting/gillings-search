@@ -107,3 +107,23 @@ a:hover {
   background-color: white;
   color: black;
 }
+
+.ArticleLink {
+  color: black;
+  line-height: 5vh;
+  font-size: 18px;
+}
+
+.ArticleLink:hover {
+  color: rgb(116, 174, 228);
+}
+
+.right {
+  padding-left: 5px;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.articleOfTheDay {
+  text-align: center;
+}

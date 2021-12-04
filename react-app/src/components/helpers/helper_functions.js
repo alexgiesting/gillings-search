@@ -1,5 +1,4 @@
-import { cloneElement } from "react";
-import ArticleCard from "../ArticleCard";
+import React, { useState } from "react";
 
 export function QueryForm({ setResults }) {
   return (
@@ -141,12 +140,6 @@ export function LoadForm({ to, from }) {
   );
 }
 
-export function ArticleOfTheDay() {
-  return (
-    <p>Article of the Day</p>
-  );
-}
-
 export function Update({ endpoint, label }) {
   return (
     <form action={`/update/${endpoint}`} >
@@ -161,5 +154,17 @@ export function Password({ _ }) {
     <label>
       <input name="key" type="text" placeholder="(password)" style={{backgroundColor:"#e0e0e0", borderStyle:"none",  borderRadius: 5 , height: 30}}/>
     </label>
+  );
+}
+
+export function StoreCitation({ document }) {
+  const [ anchorEl, setAnchorEl ] = useState(null);
+
+  const handleSave = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+  return (
+    <button type="button" onClick= {handleSave}>Save</button>
   );
 }
