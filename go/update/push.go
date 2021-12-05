@@ -26,8 +26,15 @@ type Searchable struct {
 }
 
 func pushCitations(db *database.Connection) {
+	log.Print("pushing")
+
 	var citations []database.Citation
-	db.Citations.Decode(&citations)
+	err := db.Citations.Decode(&citations)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print("citations", len(citations))
 
 	searchables := make([]Searchable, len(citations))
 	for i, citation := range citations {
@@ -50,7 +57,7 @@ func pushCitations(db *database.Connection) {
 		}
 	}
 
-	log.Print(len(searchables))
+	log.Print("searches", len(searchables))
 
 	docs := make(chan []byte)
 	i := 0
