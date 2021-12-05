@@ -23,8 +23,9 @@ func pullCitations(db *database.Connection, startDate string) {
 	// TODO only load on local runs
 	apiClient, _ := os.ReadFile(paths.SECRET_SCOPUS_CLIENT_ADDRESS)
 
-	limiter := make(chan int, 8)
-	for _, sids := range getSIDs(db) {
+	limiter := make(chan int, 4)
+	for i, sids := range getSIDs(db) {
+		log.Print(i, len(sids))
 		if len(sids) == 0 {
 			continue
 		}
