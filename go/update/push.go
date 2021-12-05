@@ -102,4 +102,5 @@ func pushCitations(db *database.Connection) {
 		body = append(body[:1], doc...)
 		body = append(body, ',')
 	}
+	log.Print("Done pushing to Solr")
 }

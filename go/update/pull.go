@@ -48,6 +48,7 @@ func pullCitations(db *database.Connection, startDate string) {
 		// TODO make a version that alters records based on faculty changes
 		// TODO make sure process can recover from interruptions
 	}
+	log.Print("Done pulling from Scopus")
 }
 
 func getSIDs(db *database.Connection) [][]string {
