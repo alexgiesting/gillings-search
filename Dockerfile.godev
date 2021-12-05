@@ -19,4 +19,6 @@ RUN go build -o /opt/bin/server
 
 EXPOSE 8080
 
-CMD [ "/opt/bin/server" ]
+CMD mkdir /run/gs-secrets\
+	&& (cp /run/secrets/* /run/gs-secrets || :)\
+	&& /opt/bin/server
