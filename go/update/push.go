@@ -50,6 +50,8 @@ func pushCitations(db *database.Connection) {
 		}
 	}
 
+	log.Print(len(searchables))
+
 	docs := make(chan []byte)
 	i := 0
 	j := 0
@@ -69,6 +71,7 @@ func pushCitations(db *database.Connection) {
 	host, _ := os.LookupEnv(paths.ENV_SOLR_HOST)
 	port, _ := os.LookupEnv(paths.ENV_SOLR_PORT)
 	url := fmt.Sprintf("http://%s:%s/solr/citations/update?", host, port)
+	log.Print(url)
 	body := make([]byte, 0, 64<<10)
 	body = append(body, '[')
 	for {
