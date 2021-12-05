@@ -1,6 +1,6 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/alexgiesting/gillings-search/go v0.3.3 h1:/HDIhjG2eSI2gc8ZMWs/1AZeE1XXBmOSF9jTFrt9kpA=
-github.com/alexgiesting/gillings-search/go v0.3.3/go.mod h1:97JzgxfzLt8lBEIDSUdBd7tMQTGjpcZTAXYFmzUygOw=
+github.com/alexgiesting/gillings-search/go v0.3.4 h1:rEASg39Lf/h87r6TocjdyYiZggOvLNksWegHP9bNKZE=
+github.com/alexgiesting/gillings-search/go v0.3.4/go.mod h1:97JzgxfzLt8lBEIDSUdBd7tMQTGjpcZTAXYFmzUygOw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
