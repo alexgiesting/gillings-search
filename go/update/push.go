@@ -2,6 +2,7 @@ package update
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -49,22 +50,24 @@ func makeSearchable(citation database.Citation) Searchable {
 func pushCitations(db *database.Connection) {
 	log.Print("pushing")
 
-	var citations []database.Citation
-	err := db.Citations.Decode(&citations)
+	citationCursor, err := db.Citations.Cursor()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Print("citations", len(citations))
-
 	docs := make(chan []byte)
 	i := 0
 	j := 0
 	go func() {
-		for _, citation := range citations {
+		for citationCursor.Next(context.TODO()) {
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			log.Printf("%d / %d", memStats.Alloc, memStats.HeapSys)
+
+			var citation database.Citation
+			err := citationCursor.Decode(&citation)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			doc, err := json.Marshal(makeSearchable(citation))
 			if err != nil {

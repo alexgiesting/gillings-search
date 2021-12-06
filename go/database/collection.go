@@ -35,6 +35,10 @@ func (collection *Collection) Decode(results interface{}) error {
 	return cursor.All(context.TODO(), results)
 }
 
+func (collection *Collection) Cursor() (*mongo.Cursor, error) {
+	return collection.mongo.Find(context.TODO(), bson.D{})
+}
+
 type Search struct {
 	collection *mongo.Collection
 	filter     []bson.D
