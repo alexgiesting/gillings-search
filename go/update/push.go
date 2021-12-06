@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/alexgiesting/gillings-search/go/database"
@@ -59,10 +58,6 @@ func pushCitations(db *database.Connection) {
 	j := 0
 	go func() {
 		for citationCursor.Next(context.TODO()) {
-			var memStats runtime.MemStats
-			runtime.ReadMemStats(&memStats)
-			log.Printf("%d / %d", memStats.Alloc, memStats.HeapSys)
-
 			var citation database.Citation
 			err := citationCursor.Decode(&citation)
 			if err != nil {
