@@ -25,6 +25,26 @@ type Searchable struct {
 	SID     []string `json:"sid"`
 }
 
+func makeSearchable(citation database.Citation) Searchable {
+	authors := make([]string, len(citation.Authors))
+	sids := make([]string, len(citation.Authors))
+	for j, author := range citation.Authors {
+		authors[j] = fmt.Sprintf("%s %s %s", author.GivenName, author.Initials, author.Surname) // TODO
+		sids[j] = author.SID
+	}
+	return Searchable{
+		ID:      citation.EID,
+		Text:    fmt.Sprintf("%s %s %s", citation.Title, citation.Abstract, strings.Join(citation.Keywords, " ")), // TODO
+		Title:   citation.Title,
+		PubType: fmt.Sprintf("%s %s", citation.PubType, citation.SubType),
+		PubName: fmt.Sprintf("%s %s %s", citation.PubName, citation.Volume, citation.Issue),
+		Date:    fmt.Sprintf("%sT00:00:00Z", citation.ISODate),
+		CitedBy: citation.CitedByCount,
+		Author:  authors,
+		SID:     sids,
+	}
+}
+
 func pushCitations(db *database.Connection) {
 	log.Print("pushing")
 
@@ -36,35 +56,12 @@ func pushCitations(db *database.Connection) {
 
 	log.Print("citations", len(citations))
 
-	searchables := make([]Searchable, len(citations))
-	for i, citation := range citations {
-		authors := make([]string, len(citation.Authors))
-		sids := make([]string, len(citation.Authors))
-		for j, author := range citation.Authors {
-			authors[j] = fmt.Sprintf("%s %s %s", author.GivenName, author.Initials, author.Surname) // TODO
-			sids[j] = author.SID
-		}
-		searchables[i] = Searchable{
-			ID:      citation.EID,
-			Text:    fmt.Sprintf("%s %s %s", citation.Title, citation.Abstract, strings.Join(citation.Keywords, " ")), // TODO
-			Title:   citation.Title,
-			PubType: fmt.Sprintf("%s %s", citation.PubType, citation.SubType),
-			PubName: fmt.Sprintf("%s %s %s", citation.PubName, citation.Volume, citation.Issue),
-			Date:    fmt.Sprintf("%sT00:00:00Z", citation.ISODate),
-			CitedBy: citation.CitedByCount,
-			Author:  authors,
-			SID:     sids,
-		}
-	}
-
-	log.Print("searches", len(searchables))
-
 	docs := make(chan []byte)
 	i := 0
 	j := 0
 	go func() {
-		for _, searchable := range searchables {
-			doc, err := json.Marshal(searchable)
+		for _, citation := range citations {
+			doc, err := json.Marshal(makeSearchable(citation))
 			if err != nil {
 				log.Fatal(err)
 			}
