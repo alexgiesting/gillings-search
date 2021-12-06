@@ -27,22 +27,12 @@ type Searchable struct {
 }
 
 func makeSearchable(citation database.Citation) Searchable {
-	log.Print("a")
 	authors := make([]string, len(citation.Authors))
-	log.Print("b")
 	sids := make([]string, len(citation.Authors))
-	log.Print("c")
 	for j, author := range citation.Authors {
-		log.Print("d")
 		authors[j] = fmt.Sprintf("%s %s %s", author.GivenName, author.Initials, author.Surname) // TODO
-		log.Print("e")
 		sids[j] = author.SID
-		log.Print("f")
 	}
-	log.Print("g")
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
-	log.Printf("%d / %d", memStats.Alloc, memStats.HeapSys)
 	return Searchable{
 		ID:      citation.EID,
 		Text:    fmt.Sprintf("%s %s %s", citation.Title, citation.Abstract, strings.Join(citation.Keywords, " ")), // TODO
@@ -72,6 +62,10 @@ func pushCitations(db *database.Connection) {
 	j := 0
 	go func() {
 		for _, citation := range citations {
+			var memStats runtime.MemStats
+			runtime.ReadMemStats(&memStats)
+			log.Printf("%d / %d", memStats.Alloc, memStats.HeapSys)
+
 			doc, err := json.Marshal(makeSearchable(citation))
 			if err != nil {
 				log.Fatal(err)
