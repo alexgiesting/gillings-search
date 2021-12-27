@@ -48,6 +48,12 @@ A copy of our architecture decision record is available at this link:[  https://
 
 As well as in the ADR.md, found in the top level of the main branch.
 
+##  End of Semester Overview
+
+Here is a video overview of all that we accomplished by the end of the 2021 fall academic semester, which was the original timeframe that we intended to work on the project. The original creators may continue to work on the project after this timeframe. 
+
+https://user-images.githubusercontent.com/49577025/147509733-385c5b9f-3ffd-4939-b783-676c983aa90f.mp4
+
 ##  Contributing
 
 In order for a new developer to get started on the project and make contributions, there are a few accesses they need to obtain. Firstly, they will need access to the GitHub repo and the Trello so they may have access to the code and the project schedule. Next, they need access to Carolina cloud apps in order to make any changes to the hosting services if needed. Otherwise, the README that our team has developed should allow for a straightforward onboarding process. In terms of styping, our team uses the Prettier formatter (<https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode>) which is an extension from the VS code marketplace to stylize our code. If you would like more information about the project this can be found at the project website: <https://tarheels.live/comp523f21o/>
