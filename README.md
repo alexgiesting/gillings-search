@@ -1,5 +1,5 @@
 # gillings-search
-A web app for querying research publications at UNC Gillings
+A web app for querying research publications at UNC Gillings. Web app can be found at http://gillings-search-giesting.apps.cloudapps.unc.edu/
 
 
 ## Gillings Search Tool
