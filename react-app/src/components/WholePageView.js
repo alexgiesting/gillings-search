@@ -9,9 +9,11 @@ import {
 
 import "../App.css";
 import ArticleCard from "./ArticleCard";
+import CitationFeatures from "./CitationFeatures";
 
 function WholePageView({ _ }) {
   const [results, setResults] = React.useState([]);
+  const [citations, setCitations] = React.useState([]);
 
   return (
     <div className="base">
@@ -73,8 +75,8 @@ function WholePageView({ _ }) {
           <QueryForm setResults={setResults} />
           <div className="right">
             {results &&
-              results.map((result, i) => (
-                <ArticleCard key={i} document={result} />
+              results.map((result) => (
+                <ArticleCard setCitations={setCitations} document={result} />
               ))}
           </div>
 
@@ -96,6 +98,16 @@ function WholePageView({ _ }) {
               <></>
             )}
           </div>
+
+          {citations.length == 0 ? (
+            <></>
+          ) : (
+            <>
+              <div className="right">
+                <CitationFeatures setCitations={setCitations} />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ export function QueryForm({ setResults }) {
           `/solr/citations/select?${makeQuery(request)}`,
           { method: "GET" }
         ).then((response) => response.json()); // TODO error handling
-        console.log(results);
+        // console.log(results);
 
         let final;
         {
@@ -31,40 +31,83 @@ export function QueryForm({ setResults }) {
       }}
     >
       {/* Main search bar */}
-      <div style={{ display: "flex", width: "100%", marginTop: 20}}>
-        <input name="keyword" type="text" style={{ flexGrow: 1, backgroundColor:"#e0e0e0", borderStyle:"none", height: 40, borderRadius: 5 }}/>
-        <input type="submit" value="Search" style={{ marginLeft: "1em",backgroundColor:"#aed3fc", borderStyle:"none", borderRadius: 5, color: "white"}} />
+      <div style={{ display: "flex", width: "100%", marginTop: 20 }}>
+        <input
+          name="keyword"
+          type="text"
+          style={{
+            flexGrow: 1,
+            backgroundColor: "#e0e0e0",
+            borderStyle: "none",
+            height: 40,
+            borderRadius: 5,
+          }}
+        />
+        <input
+          type="submit"
+          value="Search"
+          style={{
+            marginLeft: "1em",
+            backgroundColor: "#aed3fc",
+            borderStyle: "none",
+            borderRadius: 5,
+            color: "white",
+          }}
+        />
       </div>
       <br />
 
       {/* <h4>Filters</h4> */}
-      <div style={{textAlign:"center"}}>
-      {/* <QueryText name="strengths" label="Research Strength(s)" />
+      <div style={{ textAlign: "center" }}>
+        {/* <QueryText name="strengths" label="Research Strength(s)" />
         <QueryText name="department" label="Department" /> */}
-      <span style={{display: "inline-block"}}><QueryText name="title" label="Title" /></span>
-      <span style={{display: "inline-block"}}><QueryText name="author" label="Author(s)" /></span>
-      <span style={{display: "inline-block"}}><div
-        style={{ position: "relative", width: "100%", marginBottom: "0.5em"}}
-      >
-        <label>
-          Year (Range)
-          <input
-            name="start"
-            type="number"
-            min="1900"
-            max={new Date(Date.now()).getFullYear()}
-            style={{ right: 0 ,backgroundColor:"#e0e0e0", borderStyle:"none",  borderRadius: 5 , height: 30}}
-          />
-          <input
-            name="end"
-            type="number"
-            min="1900"
-            max={new Date(Date.now()).getFullYear()}
-            style={{right: 0, top: "100%" ,backgroundColor:"#e0e0e0", borderStyle:"none",  borderRadius: 5, height: 30 }}
-          />
-        </label>
-        <br />
-      </div></span>
+        <span style={{ display: "inline-block" }}>
+          <QueryText name="title" label="Title" />
+        </span>
+        <span style={{ display: "inline-block" }}>
+          <QueryText name="author" label="Author(s)" />
+        </span>
+        <span style={{ display: "inline-block" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              marginBottom: "0.5em",
+            }}
+          >
+            <label>
+              Year (Range)
+              <input
+                name="start"
+                type="number"
+                min="1900"
+                max={new Date(Date.now()).getFullYear()}
+                style={{
+                  right: 0,
+                  backgroundColor: "#e0e0e0",
+                  borderStyle: "none",
+                  borderRadius: 5,
+                  height: 30,
+                }}
+              />
+              <input
+                name="end"
+                type="number"
+                min="1900"
+                max={new Date(Date.now()).getFullYear()}
+                style={{
+                  right: 0,
+                  top: "100%",
+                  backgroundColor: "#e0e0e0",
+                  borderStyle: "none",
+                  borderRadius: 5,
+                  height: 30,
+                }}
+              />
+            </label>
+            <br />
+          </div>
+        </span>
       </div>
       <br />
     </form>
@@ -113,7 +156,13 @@ export function QueryText({ name, label }) {
         <input
           name={name}
           type="text"
-          style={{  right: 0 ,backgroundColor:"#e0e0e0", borderStyle:"none",  borderRadius: 5 , height: 30}}
+          style={{
+            right: 0,
+            backgroundColor: "#e0e0e0",
+            borderStyle: "none",
+            borderRadius: 5,
+            height: 30,
+          }}
         />
       </label>
       <br />
@@ -129,22 +178,54 @@ export function LoadForm({ to, from }) {
       encType="multipart/form-data"
     >
       <label>
-        upload {from}: <input name="file" type="file"  style={{marginLeft:60}}/>
+        upload {from}:{" "}
+        <input name="file" type="file" style={{ marginLeft: 60 }} />
       </label>
-      <br /> 
+      <br />
       <label>
-        <input name="key" type="text" placeholder="password" style={{backgroundColor:"#e0e0e0", borderStyle:"none",  borderRadius: 5 , height: 30}} />
+        <input
+          name="key"
+          type="text"
+          placeholder="password"
+          style={{
+            backgroundColor: "#e0e0e0",
+            borderStyle: "none",
+            borderRadius: 5,
+            height: 30,
+          }}
+        />
       </label>
-      <input type="submit" value="Upload" style={{backgroundColor:"#13294B", borderStyle:"none", borderRadius: 5, color: "white", height: 30}}/>
+      <input
+        type="submit"
+        value="Upload"
+        style={{
+          backgroundColor: "#13294B",
+          borderStyle: "none",
+          borderRadius: 5,
+          color: "white",
+          height: 30,
+        }}
+      />
     </form>
   );
 }
 
 export function Update({ endpoint, label }) {
   return (
-    <form action={`/update/${endpoint}`} >
+    <form action={`/update/${endpoint}`}>
       <Password />
-      <input type="submit" value={label} style={{ marginLeft: "1em",backgroundColor:"#13294B", borderStyle:"none", borderRadius: 5, color: "white", height: 30}}/>
+      <input
+        type="submit"
+        value={label}
+        style={{
+          marginLeft: "1em",
+          backgroundColor: "#13294B",
+          borderStyle: "none",
+          borderRadius: 5,
+          color: "white",
+          height: 30,
+        }}
+      />
     </form>
   );
 }
@@ -152,19 +233,30 @@ export function Update({ endpoint, label }) {
 export function Password({ _ }) {
   return (
     <label>
-      <input name="key" type="text" placeholder="(password)" style={{backgroundColor:"#e0e0e0", borderStyle:"none",  borderRadius: 5 , height: 30}}/>
+      <input
+        name="key"
+        type="text"
+        placeholder="(password)"
+        style={{
+          backgroundColor: "#e0e0e0",
+          borderStyle: "none",
+          borderRadius: 5,
+          height: 30,
+        }}
+      />
     </label>
   );
 }
 
-export function StoreCitation({ document }) {
-  const [ anchorEl, setAnchorEl ] = useState(null);
+// export function StoreCitation({ document }) {
+//   const [ anchorEl, setAnchorEl ] = useState(null);
 
-  const handleSave = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
+//   const handleSave = (event) => {
+//         setAnchorEl(event.currentTarget);
+//     };
 
-  return (
-    <button type="button" onClick= {handleSave}>Save</button>
-  );
-}
+//   return (
+//     <button type="button" onClick= {handleSave}>Save</button>
+//   );
+
+// }
