@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 
 import {
   QueryForm,
@@ -81,7 +81,7 @@ function WholePageView({ _ }) {
           </div>
 
           <div className="articleOfTheDay">
-            {results.length == 0 ? (
+            {results.length === 0 ? (
               <>
                 <h1>Article of the Day</h1>
                 <p>
@@ -99,7 +99,7 @@ function WholePageView({ _ }) {
             )}
           </div>
 
-          {citations.length == 0 ? (
+          {citations.length === 0 ? (
             <></>
           ) : (
             <>

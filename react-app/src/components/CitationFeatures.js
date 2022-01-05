@@ -1,4 +1,5 @@
 import React from "react";
+import { ExportFeature } from "./ExportFeature";
 let citations = [];
 
 export const StoreCitation = (setCitations, document, e) => {
@@ -14,7 +15,7 @@ const RemoveCitations = (setCitations, e) => {
 };
 
 const ExportCitations = (setCitations, e) => {
-  //implement export functionality
+  ExportFeature();
   RemoveCitations(setCitations, e);
 };
 
